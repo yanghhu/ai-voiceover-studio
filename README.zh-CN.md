@@ -11,9 +11,18 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Dependencies: none](https://img.shields.io/badge/core%20deps-zero-brightgreen.svg)](pyproject.toml)
 
-<img src="docs/assets/demo.gif" alt="终端命令与生成的无人出镜视频：Ken Burns 缓慢推拉、两个 AI 声音、烧录字幕" width="720">
+<table>
+<tr>
+<td align="center"><img src="docs/assets/demo.gif" alt="由 examples/demo.en.md 生成的 16:9 无人出镜视频：电影感配图、Ken Burns 运镜、动态开场标题、逐词高亮字幕" width="560"></td>
+<td align="center"><img src="docs/assets/demo-short-zh.gif" alt="由 examples/demo.zh.md 生成的 9:16 中文短视频：星空配图与逐词大字幕" width="200"></td>
+</tr>
+<tr>
+<td align="center"><sub>16:9 YouTube · <a href="docs/assets/demo.mp4">带声音完整视频（MP4，34 秒）</a></sub></td>
+<td align="center"><sub>9:16 竖屏 · <a href="docs/assets/demo-short-zh.mp4">MP4，23 秒</a></sub></td>
+</tr>
+</table>
 
-<sub>真实输出、未经剪辑：[带声音的完整视频（MP4，40 秒）](docs/assets/demo.mp4) · [纯配音（MP3）](docs/assets/sample-voiceover.mp3) · [字幕（SRT）](docs/assets/sample-voiceover.srt) · [中文竖屏短视频（MP4）](docs/assets/demo-short-zh.mp4)</sub>
+<sub>各由一条命令生成、未经剪辑：免费 Edge 语音，自动生成的氛围音乐在说话时自动压低，配图来自 <a href="examples/broll">examples/broll</a> · <a href="docs/assets/sample-voiceover.mp3">纯配音（MP3）</a> · <a href="docs/assets/sample-voiceover.srt">字幕（SRT）</a></sub>
 
 </div>
 
@@ -22,15 +31,15 @@
 ```bash
 git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio
 pip install -e ".[edge]"
-voiceover video --images examples/slides --script examples/script.md -o out/video.mp4
+voiceover video --script examples/demo.zh.md --vertical --music ambient -o out/short.mp4
 ```
 
-就这些。你会得到 `out/video.mp4`（1080p、两个声音、Ken Burns 动效、烧录字幕）、`out/video.srt`，以及 `out/video_voiceover/` 里的配音音轨。需要 Python 3.9+ 和 [ffmpeg](https://ffmpeg.org)，`voiceover doctor` 会帮你检查。
+就这些。你会得到 `out/short.mp4`（竖屏 1080x1920：逐段配图 + Ken Burns 运镜与转场、动态开场标题、逐词高亮字幕、说话时自动压低的背景音乐）、`out/short.srt`，以及 `out/short_voiceover/` 里的配音音轨。想要和演示完全一样的字体，用 `--font` 指定粗体字体文件（演示用的是免费的 Noto Sans SC Bold 和 Montserrat ExtraBold）。需要 Python 3.9+ 和 [ffmpeg](https://ffmpeg.org)，`voiceover doctor` 会帮你检查。
 
 ```bash
 voiceover script examples/script.zh.md -o out/      # 只要音频：out/voiceover.mp3 + .srt + manifest.json
 voiceover say "欢迎回到我的频道！" -o hello.mp3
-voiceover video --script examples/script.zh.md -o short.mp4 --size 1080x1920 --style bold   # 竖屏短视频，无需图片
+voiceover video --script examples/demo.en.md --style tiktok --music ambient -o video.mp4   # 16:9 YouTube
 voiceover doctor                                    # 检查 ffmpeg、引擎、密钥、中文字体
 ```
 
@@ -46,9 +55,12 @@ voiceover doctor                                    # 检查 ffmpeg、引擎、�
 | --- | --- |
 | 🆓 **免注册即用** | 默认引擎为免费的微软 Edge 神经网络语音（`edge-tts`），322 个声音、75 种语言，无需账号和密钥 |
 | 🎭 **多角色脚本** | Markdown/TXT 中写 `[旁白]:`、`[小林]:`，每个角色自动分配不同声音，也可在 `voices.json` 指定 |
-| 🎞️ **无人出镜视频** | 图片（或只有脚本）→ 带 Ken Burns 推拉、交叉淡化、进度条和样式化烧录字幕的 MP4 |
+| 🎞️ **无人出镜视频** | 每段一个画面（脚本里写 `![](clip.mp4)`）→ Ken Burns 运镜、滑动/缩放/淡化转场、电影感调色、动态开场标题的 MP4 |
+| 🔤 **动态字幕** | 抖音 / 剪映风格逐词高亮（按真实词级时间）、弹出动画、关键词变色（脚本里 `**加粗**`），横竖屏安全区 |
+| 🎵 **背景音乐自动闪避** | 内置自动生成的氛围音乐（无版权风险），或用你自己的音乐，说话时自动压低 |
+| ✨ **没有图片也好看** | 没配图的段落用流动渐变 + 关键词大字动态排版，不再是空白背景 |
 | 💬 **精准字幕** | 按引擎返回的句子边界计时生成 SRT，或对成品音轨做语音识别；中文断行友好 |
-| 🎨 **字幕样式** | `clean`、`box`、`bold`（短视频）、`minimal`；可显示说话人；横竖屏自动适配字号 |
+| 🎨 **字幕样式** | `tiktok`（竖屏默认）、`clean`（横屏默认）、`bold`、`minimal`、`box`；横竖屏自动适配字号 |
 | 🧬 **声音克隆** | 使用 Miragea 引擎：用参考音频 URL（及其原文）代替现成音色 |
 | ♻️ **可安全重跑** | 分段缓存 + 确定性幂等键，未改动的行不会重复生成 |
 | 🔌 **可插拔引擎** | `edge`、`miragea`、`openai`、离线 `dummy`，或通过 `VoiceProvider` 接口接入自己的引擎 |
@@ -125,27 +137,41 @@ voiceover say "这是用文字生成的我自己的声音。" \
 
 字幕在句子和分句处切分，并按两行换行（支持中日韩文字）。可以在 YouTube 工作室 →「字幕」上传 `.srt`，或直接烧录进视频。
 
-## 用图片和脚本生成无人出镜 YouTube 视频
+## 用脚本生成无人出镜 YouTube 视频和竖屏短视频
+
+画面直接写在脚本里：Markdown 图片行指定下一段的图片或视频片段，`**加粗**` 的词会在字幕中高亮：
+
+```markdown
+# 你看到的星星，可能早就不在了
+
+![](broll/zh/01-stars.jpg)
+今晚抬头看到的星光，可能来自一颗**早已消失**的恒星。
+```
 
 ```bash
-voiceover video --images examples/slides --script examples/script.md -o video.mp4
-voiceover video --script examples/script.zh.md -o short.mp4 --size 1080x1920 --style bold   # 竖屏，无需图片
-voiceover video --images slides/ --script script.md -o video.mp4 --style box --speaker-labels
+voiceover video --script examples/demo.zh.md --vertical --music ambient -o short.mp4          # 9:16 抖音 / Shorts / Reels
+voiceover video --script examples/demo.en.md --style tiktok --music ambient -o video.mp4      # 16:9 YouTube
+voiceover video --script 笔记.md -o explainer.mp4                                              # 没有图片：关键词动态大字
+voiceover video --images slides/ --script script.md --music song.mp3 --music-volume 0.4 -o video.mp4
 ```
 
 | 选项 | 默认 | 作用 |
 | --- | --- | --- |
-| `--images 目录` | 渐变背景 | 按文件名排序；图片数等于段数时，每张图正好对应一段旁白 |
-| `--subtitles burn\|sidecar\|none` | `burn` | 烧录样式化字幕（同时输出 `.srt`）、仅外挂、或不要字幕 |
-| `--style clean\|box\|bold\|minimal` | `clean` | 字幕外观；`bold` 为居中大字，适合 Shorts / 抖音 |
-| `--motion kenburns\|none` | `kenburns` | 缓慢缓动推拉与平移，每张图方向交替 |
-| `--transition 秒` | `0.5` | 图片之间交叉淡化（`0` 为硬切） |
-| `--size 宽x高` | `1920x1080` | 竖屏用 `1080x1920` |
-| `--title 文本` / `--no-title` | 无图片时显示脚本第一个 `#` 标题 | 片头标题 |
-| `--speaker-labels` | 关 | 字幕上方显示说话人 |
-| `--font 字体名或文件` | Inter，缺字时回退系统字体 | 中文字幕需安装中文字体（`voiceover doctor` 会检查） |
+| 脚本中的 `![](文件)` | — | 该段的画面（图片或视频片段），路径相对脚本 |
+| `--images 目录` | — | 给没写 `![](...)` 的段落按文件名顺序配图 |
+| `--style tiktok\|clean\|bold\|minimal\|box` | 竖屏 `tiktok`，横屏 `clean` | `tiktok`：1–4 个大字词，当前词弹出变黄、关键词绿色 · `bold`：超大字随读随现 · `clean`：两行安静字幕 · `minimal` / `box`：静态字幕 |
+| `--music ambient\|pulse\|文件` | 无 | 背景音乐；`ambient`、`pulse` 由本项目渲染时现场合成（无版权问题），也可用任意音频文件（自动循环） |
+| `--music-volume 0-1` | `0.5` | 响度归一后的音乐音量 |
+| `--no-duck` | 默认闪避 | 说话时不压低音乐 |
+| `--hook 文本` / `--no-hook` | 脚本第一个 `#` 标题 | 开头 `--hook-seconds`（2.2 秒）的动态标题卡 |
+| `--vertical` / `--size 宽x高` | `1920x1080` | `--vertical` 即 `1080x1920`；字幕避开抖音 / Shorts 按钮区域 |
+| `--transition-style mix\|fade\|slide\|zoom\|cut` | `mix` | 转场风格；`--transition 秒` 控制时长（0.5） |
+| `--grade cinematic\|none` | `cinematic` | 对比度、暗角和胶片颗粒 |
+| `--motion kenburns\|none` | `kenburns` | 静态图运镜 |
+| `--font 字体名或文件` | Inter，缺字回退系统字体 | 中文字幕需中文字体，例如 `--font NotoSansSC-Bold.otf`（`voiceover doctor` 会检查） |
+| `--subtitles burn\|sidecar\|none` | `burn` | 烧录字幕（同时输出 `.srt`）、仅外挂、或不要 |
 
-视频由一条 ffmpeg 命令渲染（libass 字幕、`xfade` 转场），不再依赖 Python 视频库。示例图片由 [`examples/make_slides.py`](examples/make_slides.py) 绘制。
+整个视频由一条 ffmpeg 命令渲染（zoompan、xfade、libass、sidechaincompress），不依赖 Python 视频库；34 秒 1080p 演示在双核 CPU 上约 80 秒渲染完。[`examples/broll`](examples/broll) 里的演示配图为本项目生成，可按仓库许可证自由使用。
 
 ## 在 Python 中使用
 
@@ -200,7 +226,7 @@ print(result.audio_path, result.srt_path)
 
 ## 路线图
 
-已完成：演示 GIF 与示例视频、免费默认引擎（edge）与 OpenAI 引擎、Ken Burns 动效与字幕样式、`voiceover doctor`。计划中：脚本内嵌图片控制切换；背景音乐自动闪避；逐字高亮字幕；翻译并配音；并发生成；发布到 PyPI。
+已完成：演示 GIF 与示例视频、免费默认引擎（edge）与 OpenAI 引擎、Ken Burns 动效与字幕样式、`voiceover doctor`、脚本内嵌配图、背景音乐自动闪避、逐词高亮动态字幕。计划中：按关键词搜索素材；翻译并配音；并发生成；发布到 PyPI。
 
 ## 参与贡献
 

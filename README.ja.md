@@ -10,9 +10,18 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-<img src="docs/assets/demo.gif" alt="ターミナルのコマンドと生成された顔出しなし動画：Ken Burns のズーム、2 つの AI 音声、焼き込み字幕" width="720">
+<table>
+<tr>
+<td align="center"><img src="docs/assets/demo.gif" alt="examples/demo.en.md から作った 16:9 の顔出しなし動画：シネマティックな B ロール、Ken Burns、フックカード、単語ごとの字幕" width="560"></td>
+<td align="center"><img src="docs/assets/demo-short-zh.gif" alt="examples/demo.zh.md から作った 9:16 の中国語ショート" width="200"></td>
+</tr>
+<tr>
+<td align="center"><sub>16:9 YouTube · <a href="docs/assets/demo.mp4">音声付き動画（MP4、34 秒）</a></sub></td>
+<td align="center"><sub>9:16 ショート · <a href="docs/assets/demo-short-zh.mp4">MP4、23 秒</a></sub></td>
+</tr>
+</table>
 
-<sub>実際の出力（無編集）：[音声付きの動画（MP4、40 秒）](docs/assets/demo.mp4) · [ナレーションのみ（MP3）](docs/assets/sample-voiceover.mp3) · [字幕（SRT）](docs/assets/sample-voiceover.srt) · [中国語の縦型ショート（MP4）](docs/assets/demo-short-zh.mp4)</sub>
+<sub>それぞれコマンド 1 回の無編集出力：無料の Edge 音声、自動生成 BGM（声の下で自動ダッキング）、B ロールは <a href="examples/broll">examples/broll</a> · <a href="docs/assets/sample-voiceover.mp3">ナレーションのみ（MP3）</a> · <a href="docs/assets/sample-voiceover.srt">字幕（SRT）</a></sub>
 
 </div>
 
@@ -21,10 +30,10 @@
 ```bash
 git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio
 pip install -e ".[edge]"
-voiceover video --images examples/slides --script examples/script.md -o out/video.mp4
+voiceover video --script examples/demo.en.md --style tiktok --music ambient -o out/video.mp4
 ```
 
-これだけです。`out/video.mp4`（1080p、2 人の声、Ken Burns モーション、焼き込み字幕）、`out/video.srt`、`out/video_voiceover/` のナレーション音声ができます。必要なのは Python 3.9+ と [ffmpeg](https://ffmpeg.org) で、`voiceover doctor` が確認します。
+これだけです。`out/video.mp4`（1080p：段落ごとの B ロールと Ken Burns・トランジション、アニメーションするフック、単語ごとにハイライトされる字幕、声に合わせて自動で下がる BGM）、`out/video.srt`、`out/video_voiceover/` のナレーション音声ができます。必要なのは Python 3.9+ と [ffmpeg](https://ffmpeg.org) で、`voiceover doctor` が確認します。
 
 ```bash
 voiceover script examples/script.md -o out/      # 音声のみ：out/voiceover.mp3 + .srt + manifest.json
@@ -40,9 +49,12 @@ voiceover doctor                                 # ffmpeg・エンジン・キ�
 | --- | --- |
 | 🆓 **登録不要** | 既定エンジンは無料の Microsoft Edge ニューラル音声（`edge-tts`）。322 音声・75 言語、アカウントもキーも不要 |
 | 🎭 **複数話者の台本** | `[NARRATOR]:` `[ALEX]:` と書くだけで話者ごとに別の声。`voices.json` で指定も可能 |
-| 🎞️ **顔出しなし動画** | 画像（または台本だけ）→ Ken Burns ズーム、クロスフェード、進捗バー、スタイル付き焼き込み字幕の MP4 |
+| 🎞️ **顔出しなし動画** | 段落ごとの B ロール（台本に `![](clip.mp4)`）→ Ken Burns、スライド／ズーム／フェードのトランジション、シネマ風グレード、フックカード付き MP4 |
+| 🔤 **アニメーション字幕** | TikTok / CapCut 風の単語ごとのハイライト（実際の単語タイミング）、ポップイン、キーワード色（台本の `**太字**`）、9:16 / 16:9 のセーフエリア |
+| 🎵 **BGM とダッキング** | 内蔵の自動生成アンビエント曲（ライセンス不要）または手持ちの曲。話している間は自動で音量を下げる |
+| ✨ **画像なしでも見栄えよく** | B ロールのない段落はアニメーショングラデーション＋キーフレーズの大きなキネティックタイポ |
 | 💬 **正確な字幕** | エンジンの文境界から SRT を生成、または完成音声を音声認識。CJK の改行に対応 |
-| 🎨 **字幕スタイル** | `clean`・`box`・`bold`（ショート向け）・`minimal`、話者ラベル、横長／縦長に自動対応 |
+| 🎨 **字幕スタイル** | `tiktok`（縦型の既定）・`clean`（横長の既定）・`bold`・`minimal`・`box`、横長／縦長に自動対応 |
 | 🧬 **ボイスクローン** | Miragea エンジンで、参照音声の URL（と書き起こし）を声として使用 |
 | ♻️ **安全な再実行** | セグメントキャッシュと決定的な冪等キーで、変更のない行は再生成しない |
 | 🔌 **差し替え可能なエンジン** | `edge`・`miragea`・`openai`・オフライン `dummy`、または `VoiceProvider` で独自エンジン |
@@ -91,15 +103,17 @@ voiceover say "テキストから生成した私自身の声です。" \
 
 `--subtitles timing`（既定、台本の文字をそのまま使用し追加の API 呼び出しなし）、`recognize`（完成音声を音声認識）、`none` から選べます。日本語・中国語・韓国語の改行にも対応しています。
 
-## 画像と台本から顔出しなし YouTube 動画を作る
+## 台本から顔出しなし YouTube 動画とショートを作る
+
+B ロールは台本に直接書きます。Markdown の画像行がその下の段落の画像／動画クリップになり、`**太字**` は字幕でハイライトされます。
 
 ```bash
-voiceover video --images examples/slides --script examples/script.md -o video.mp4
-voiceover video --script script.md -o short.mp4 --size 1080x1920 --style bold   # 縦型、画像なしでも可
-voiceover video --images slides/ --script script.md -o video.mp4 --style box --speaker-labels
+voiceover video --script examples/demo.en.md --style tiktok --music ambient -o video.mp4   # 16:9 YouTube
+voiceover video --script examples/demo.zh.md --vertical --music ambient -o short.mp4       # 9:16 ショート / リール / TikTok
+voiceover video --script notes.md -o explainer.mp4                                         # 画像なし：キネティックタイポ
 ```
 
-主なオプション：`--subtitles burn|sidecar|none`（既定 `burn`、`.srt` も出力）、`--style clean|box|bold|minimal`、`--motion kenburns|none`、`--transition 秒`（既定 0.5）、`--size 1080x1920`、`--title` / `--no-title`、`--speaker-labels`、`--font`（日本語字幕には CJK フォントが必要。`voiceover doctor` で確認）。画像の枚数がセグメント数と同じなら、各画像はそのセグメントの間だけ表示されます。動画は ffmpeg 1 回の呼び出しで描画され、Python の動画ライブラリは不要です。
+主なオプション：`--style tiktok|clean|bold|minimal|box`（縦型は `tiktok`、横長は `clean` が既定）、`--music ambient|pulse|ファイル`（`ambient`・`pulse` はレンダリング時に本プロジェクトのコードで合成、ライセンス不要）、`--music-volume 0-1`（既定 0.5）、`--no-duck`、`--hook テキスト` / `--no-hook`（既定は台本の最初の `#` 見出し）、`--vertical`、`--transition-style mix|fade|slide|zoom|cut`、`--grade cinematic|none`、`--images フォルダ`（`![](...)` のない段落用）、`--font`（日本語字幕には CJK フォントが必要。`voiceover doctor` で確認）。動画は ffmpeg 1 回の呼び出しで描画され、Python の動画ライブラリは不要です。
 
 ## 対応言語
 

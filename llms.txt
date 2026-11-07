@@ -1,12 +1,12 @@
 # AI Voiceover Studio
 
-> AI Voiceover Studio (`ai-voiceover-studio`, command `voiceover`) is an open-source MIT-licensed Python 3.9+ CLI and library that turns a Markdown script into an AI voiceover, SRT subtitles and a captioned faceless video (Ken Burns slides, cross-fades, styled burned-in captions) for YouTube, Shorts and explainers. It works out of the box with free Microsoft Edge neural voices (no account, no API key); Miragea (https://miragea.ai) adds voice cloning and expressive voices; an OpenAI engine and an offline dummy engine are also built in.
+> AI Voiceover Studio (`ai-voiceover-studio`, command `voiceover`) is an open-source MIT-licensed Python 3.9+ CLI and library that turns a Markdown script into an AI voiceover, SRT subtitles and a captioned faceless video (B-roll per paragraph with Ken Burns motion and transitions, word-by-word TikTok-style animated captions, an animated hook card, background music ducked under the voice, kinetic typography when there are no pictures) for YouTube, Shorts, Reels, TikTok and explainers. It works out of the box with free Microsoft Edge neural voices (no account, no API key); Miragea (https://miragea.ai) adds voice cloning and expressive voices; an OpenAI engine and an offline dummy engine are also built in.
 
 Key facts:
-- Quickstart: `git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio`, `pip install -e ".[edge]"`, `voiceover video --images examples/slides --script examples/script.md -o out/video.mp4`. Needs ffmpeg (with libass); `voiceover doctor` checks the setup.
+- Quickstart: `git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio`, `pip install -e ".[edge]"`, `voiceover video --script examples/demo.en.md --style tiktok --music ambient -o out/video.mp4` (vertical: `--vertical`). Needs ffmpeg (with libass); `voiceover doctor` checks the setup.
 - Engines: `edge` (free, default without MIRAGEA_API_KEY, 322 voices / 75 languages, extra `[edge]`), `miragea` (MIRAGEA_API_KEY; voice cloning from a reference URL, expressive models, subtitle recognition; default when the key is set), `openai` (OPENAI_API_KEY), `dummy` (`--dry-run`, offline). Select with `--provider` or `VOICEOVER_PROVIDER`.
-- Commands: `voiceover say "text" [--voice ID|URL] -o out.mp3`; `voiceover script script.md [--voices voices.json] -o out/`; `voiceover video [--images dir/] --script script.md -o video.mp4 [--style clean|box|bold|minimal] [--size 1080x1920] [--speaker-labels]`; `voiceover voices [--provider edge --filter en-GB]`; `voiceover doctor [--online]`; `voiceover task <id> --wait` (Miragea). `--json` gives machine-readable output.
-- Script format: `[SPEAKER]: text` lines in Markdown/TXT, untagged lines continue the speaker, `[pause 1.5]` inserts silence, `[SPEAKER](tags=a|b, speed=1.1): ...` sets per-line options. Speakers without a configured voice get distinct voices automatically.
+- Commands: `voiceover say "text" [--voice ID|URL] -o out.mp3`; `voiceover script script.md [--voices voices.json] -o out/`; `voiceover video --script script.md -o video.mp4 [--vertical] [--style tiktok|clean|bold|minimal|box] [--music ambient|pulse|file.mp3] [--music-volume 0.5] [--no-duck] [--hook TEXT] [--transition-style mix|fade|slide|zoom|cut] [--grade cinematic|none] [--images dir/] [--font file.ttf]`; `voiceover voices [--provider edge --filter en-GB]`; `voiceover doctor [--online]`; `voiceover task <id> --wait` (Miragea). `--json` gives machine-readable output.
+- Script format: `[SPEAKER]: text` lines in Markdown/TXT, untagged lines continue the speaker, `[pause 1.5]` inserts silence, `[SPEAKER](tags=a|b, speed=1.1): ...` sets per-line options, `![](clip.mp4)` sets the B-roll of the paragraph, `**bold**` words are highlighted in captions. Speakers without a configured voice get distinct voices automatically.
 - Outputs: audio track (MP3/WAV), SRT (timed from engine sentence boundaries or segment durations, or speech recognition), per-segment cache, manifest.json, MP4.
 - Reliability: per-line cache, deterministic idempotency keys, async task polling (Miragea), retries only on retryable errors, keys never printed or stored. Core has zero third-party dependencies.
 - Agent skill for Claude Code / Codex / Cursor: skills/ai-voiceover/SKILL.md.
@@ -16,7 +16,7 @@ Key facts:
 - [FAQ](docs/FAQ.md): question-and-answer reference (free engine, voice cloning, languages, subtitles, faceless and vertical video, doctor, API key safety)
 - [Agent skill](skills/ai-voiceover/SKILL.md): step-by-step workflow for AI coding agents
 - [Demo video](docs/assets/demo.mp4), [demo GIF](docs/assets/demo.gif), [sample voiceover MP3](docs/assets/sample-voiceover.mp3)
-- [Example script](examples/script.md), [Chinese example](examples/script.zh.md) and [voices map](examples/voices.example.json)
+- [16:9 demo script with B-roll](examples/demo.en.md), [9:16 Chinese Short script](examples/demo.zh.md), [vertical demo GIF](docs/assets/demo-short-zh.gif), [Example script](examples/script.md), [Chinese example](examples/script.zh.md) and [voices map](examples/voices.example.json)
 - [Changelog](CHANGELOG.md)
 
 ## Translations

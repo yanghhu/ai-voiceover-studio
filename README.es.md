@@ -10,9 +10,18 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-<img src="docs/assets/demo.gif" alt="Comando en la terminal y el vídeo sin rostro generado: zoom Ken Burns, dos voces con IA y subtítulos incrustados" width="720">
+<table>
+<tr>
+<td align="center"><img src="docs/assets/demo.gif" alt="Vídeo sin rostro 16:9 generado desde examples/demo.en.md: B-roll cinematográfico, Ken Burns, gancho animado y subtítulos palabra por palabra" width="560"></td>
+<td align="center"><img src="docs/assets/demo-short-zh.gif" alt="Short vertical 9:16 en chino generado desde examples/demo.zh.md" width="200"></td>
+</tr>
+<tr>
+<td align="center"><sub>16:9 YouTube · <a href="docs/assets/demo.mp4">vídeo completo con sonido (MP4, 34 s)</a></sub></td>
+<td align="center"><sub>9:16 Short · <a href="docs/assets/demo-short-zh.mp4">MP4, 23 s</a></sub></td>
+</tr>
+</table>
 
-<sub>Salida real, sin editar: [vídeo completo con sonido (MP4, 40 s)](docs/assets/demo.mp4) · [solo la locución (MP3)](docs/assets/sample-voiceover.mp3) · [subtítulos (SRT)](docs/assets/sample-voiceover.srt) · [Short vertical en chino (MP4)](docs/assets/demo-short-zh.mp4)</sub>
+<sub>Salida real de un solo comando cada uno, sin editar: voz gratuita de Edge, música ambiental generada con ducking bajo la voz, B-roll de <a href="examples/broll">examples/broll</a> · <a href="docs/assets/sample-voiceover.mp3">solo la locución (MP3)</a> · <a href="docs/assets/sample-voiceover.srt">subtítulos (SRT)</a></sub>
 
 </div>
 
@@ -21,10 +30,10 @@
 ```bash
 git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio
 pip install -e ".[edge]"
-voiceover video --images examples/slides --script examples/script.md -o out/video.mp4
+voiceover video --script examples/demo.en.md --style tiktok --music ambient -o out/video.mp4
 ```
 
-Eso es todo. Obtienes `out/video.mp4` (1080p, dos voces, movimiento Ken Burns, subtítulos incrustados), `out/video.srt` y la pista de locución en `out/video_voiceover/`. Necesita Python 3.9+ y [ffmpeg](https://ffmpeg.org); `voiceover doctor` comprueba ambos.
+Eso es todo. Obtienes `out/video.mp4` (1080p: B-roll por párrafo con Ken Burns y transiciones, gancho animado, subtítulos palabra por palabra y música que baja sola bajo la voz), `out/video.srt` y la pista de locución en `out/video_voiceover/`. Necesita Python 3.9+ y [ffmpeg](https://ffmpeg.org); `voiceover doctor` comprueba ambos.
 
 ```bash
 voiceover script examples/script.md -o out/      # solo audio: out/voiceover.mp3 + .srt + manifest.json
@@ -40,9 +49,12 @@ No hace falta archivo de voces: cada personaje del guion recibe automáticamente
 | --- | --- |
 | 🆓 **Sin registro** | el motor por defecto son las voces neuronales gratuitas de Microsoft Edge (`edge-tts`): 322 voces y 75 idiomas, sin cuenta ni clave |
 | 🎭 **Varios personajes** | líneas `[NARRADOR]:` / `[ALEX]:`; cada personaje recibe su propia voz automáticamente, o asígnalas en `voices.json` |
-| 🎞️ **Vídeo sin rostro** | imágenes (o solo el guion) → MP4 con zoom Ken Burns, fundidos, barra de progreso y subtítulos con estilo |
+| 🎞️ **Vídeo sin rostro** | B-roll por párrafo (`![](clip.mp4)` en el guion) → MP4 con Ken Burns, transiciones de deslizamiento / zoom / fundido, etalonaje cinematográfico y tarjeta de gancho animada |
+| 🔤 **Subtítulos animados** | resaltado palabra por palabra al estilo TikTok / CapCut con tiempos reales, efecto pop, palabras clave en color (`**negrita**` en el guion), zonas seguras 9:16 y 16:9 |
+| 🎵 **Música con ducking** | pistas ambientales generadas por el propio proyecto (sin licencias) o tu archivo, bajando automáticamente mientras habla la voz |
+| ✨ **Sin imágenes, también se ve bien** | los párrafos sin B-roll muestran un degradado animado con tipografía cinética de la frase clave |
 | 💬 **Subtítulos precisos** | SRT a partir de los límites de frase del motor, o por reconocimiento de voz; ajuste de líneas compatible con CJK |
-| 🎨 **Estilos de subtítulos** | `clean`, `box`, `bold` (Shorts/Reels) y `minimal`; etiquetas de personaje; se adaptan a 16:9 y 9:16 |
+| 🎨 **Estilos de subtítulos** | `tiktok` (por defecto en vertical), `clean` (por defecto en horizontal), `bold`, `minimal`, `box`; se adaptan a 16:9 y 9:16 |
 | 🧬 **Clonación de voz** | con el motor Miragea: la URL de un audio de referencia (y su transcripción) como voz |
 | ♻️ **Repetir de forma segura** | caché por línea y claves de idempotencia deterministas |
 | 🔌 **Motores intercambiables** | `edge`, `miragea`, `openai`, `dummy` sin conexión, o el tuyo con la interfaz `VoiceProvider` |
@@ -87,15 +99,17 @@ Clona solo tu propia voz o voces para las que tengas permiso explícito.
 
 `--subtitles timing` (por defecto, texto literal del guion, sin llamadas extra a la API), `recognize` (reconocimiento de voz sobre la mezcla final) o `none`.
 
-## Vídeo de YouTube sin rostro a partir de imágenes y un guion
+## Vídeo de YouTube y Shorts sin rostro a partir de un guion
+
+El B-roll va en el propio guion: una línea de imagen Markdown define la imagen o el clip del párrafo siguiente, y las palabras en `**negrita**` se resaltan en los subtítulos.
 
 ```bash
-voiceover video --images examples/slides --script examples/script.md -o video.mp4
-voiceover video --script guion.md -o short.mp4 --size 1080x1920 --style bold   # vertical, sin imágenes
-voiceover video --images slides/ --script guion.md -o video.mp4 --style box --speaker-labels
+voiceover video --script examples/demo.en.md --style tiktok --music ambient -o video.mp4   # 16:9 YouTube
+voiceover video --script examples/demo.zh.md --vertical --music ambient -o short.mp4       # 9:16 Shorts / Reels / TikTok
+voiceover video --script notas.md -o explicacion.mp4                                       # sin imágenes: tipografía cinética
 ```
 
-Opciones principales: `--subtitles burn|sidecar|none` (por defecto `burn`, también escribe `.srt`), `--style clean|box|bold|minimal`, `--motion kenburns|none`, `--transition SEG` (0,5 por defecto), `--size 1080x1920`, `--title` / `--no-title`, `--speaker-labels`, `--font`. Si el número de imágenes coincide con el de segmentos, cada imagen se muestra exactamente mientras se oye su segmento. El vídeo se genera con una sola llamada a ffmpeg, sin librerías de vídeo de Python.
+Opciones principales: `--style tiktok|clean|bold|minimal|box` (`tiktok` por defecto en vertical, `clean` en horizontal), `--music ambient|pulse|ARCHIVO` (`ambient` y `pulse` se sintetizan con el código del proyecto al renderizar, sin licencias), `--music-volume 0-1` (0,5), `--no-duck`, `--hook TEXTO` / `--no-hook` (por defecto el primer título `#`), `--vertical`, `--transition-style mix|fade|slide|zoom|cut`, `--grade cinematic|none`, `--images CARPETA` (para párrafos sin `![](...)`), `--font`. El vídeo se genera con una sola llamada a ffmpeg, sin librerías de vídeo de Python.
 
 ## Idiomas compatibles
 

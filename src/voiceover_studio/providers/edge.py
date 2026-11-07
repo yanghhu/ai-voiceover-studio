@@ -6,14 +6,16 @@ Install the extra: ``pip install "ai-voiceover-studio[edge]"``.
   or ``zh-CN-XiaoxiaoNeural`` (``voiceover voices --provider edge``). Without
   one, a voice is picked from the language of the text (or ``--lang``).
 * ``speed`` maps to the engine's rate (``1.25`` -> ``+25%``).
-* Sentence timings reported by the engine are returned in ``meta["sentences"]``
-  and used for subtitle timing.
+* Word timings reported by the engine are returned in ``meta["words"]`` (used for
+  word-by-word animated captions) and grouped into ``meta["sentences"]`` (used for
+  SRT timing). Older edge-tts versions only report sentences.
 * Voice cloning (reference audio) is not available on this engine; use the
   ``miragea`` provider for that.
 
 Set ``VOICEOVER_EDGE_PROXY`` to route this engine through a specific proxy.
 """
 import asyncio
+import inspect
 import os
 import re
 import threading
@@ -21,6 +23,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..errors import ConfigError, NotSupported, ProviderError
+from ..words import sentences_from_words
 from .base import SynthesisResult, Voice, VoiceInfo, VoiceProvider
 
 _CJK = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf]")
@@ -147,23 +150,37 @@ class EdgeProvider(VoiceProvider):
     def _factory(self) -> Callable[..., Any]:
         return self._communicate or _import_edge().Communicate
 
-    async def _stream(self, text: str, name: str, rate: str) -> Tuple[bytes, List[Dict[str, Any]]]:
+    def _supports_word_boundary(self, factory: Callable[..., Any]) -> bool:
+        try:
+            return "boundary" in inspect.signature(factory).parameters
+        except (TypeError, ValueError):
+            return False
+
+    async def _stream(self, text: str, name: str, rate: str
+                      ) -> Tuple[bytes, List[Dict[str, Any]], List[Dict[str, Any]]]:
         kwargs: Dict[str, Any] = {"rate": rate}
         if self.proxy:
             kwargs["proxy"] = self.proxy
-        comm = self._factory()(text, name, **kwargs)
+        factory = self._factory()
+        if self._supports_word_boundary(factory):
+            kwargs["boundary"] = "WordBoundary"
+        comm = factory(text, name, **kwargs)
         audio = bytearray()
         sentences: List[Dict[str, Any]] = []
+        words: List[Dict[str, Any]] = []
         async for chunk in comm.stream():
             kind = chunk.get("type")
             if kind == "audio":
                 audio += chunk.get("data") or b""
             elif kind in ("SentenceBoundary", "WordBoundary"):
                 start = float(chunk.get("offset", 0)) / TICKS_PER_SECOND
-                sentences.append({"start": round(start, 3),
-                                  "end": round(start + float(chunk.get("duration", 0)) / TICKS_PER_SECOND, 3),
-                                  "text": str(chunk.get("text", "")).strip()})
-        return bytes(audio), sentences
+                item = {"start": round(start, 3),
+                        "end": round(start + float(chunk.get("duration", 0)) / TICKS_PER_SECOND, 3),
+                        "text": str(chunk.get("text", "")).strip()}
+                (words if kind == "WordBoundary" else sentences).append(item)
+        if words and not sentences:
+            sentences = sentences_from_words(text, words)
+        return bytes(audio), sentences, words
 
     def synthesize(self, text: str, voice: Voice, *, audio_format: str = "mp3",
                    cache_key: Optional[str] = None) -> SynthesisResult:
@@ -174,7 +191,7 @@ class EdgeProvider(VoiceProvider):
         last: Optional[BaseException] = None
         for attempt in range(self.max_retries):
             try:
-                audio, sentences = _run(lambda: self._stream(text, name, rate))
+                audio, sentences, words = _run(lambda: self._stream(text, name, rate))
             except (ConfigError, NotSupported):
                 raise
             except ValueError as exc:
@@ -188,8 +205,11 @@ class EdgeProvider(VoiceProvider):
                 last = exc
             else:
                 if audio:
-                    return SynthesisResult(audio, "mp3", {"provider": self.name, "voice": name,
-                                                          "rate": rate, "sentences": sentences})
+                    meta: Dict[str, Any] = {"provider": self.name, "voice": name, "rate": rate,
+                                            "sentences": sentences}
+                    if words:
+                        meta["words"] = words
+                    return SynthesisResult(audio, "mp3", meta)
                 last = ProviderError("No audio received for voice %s" % name, code="no_audio")
             if attempt + 1 < self.max_retries:
                 self.sleep(min(2.0 ** attempt, 8.0))

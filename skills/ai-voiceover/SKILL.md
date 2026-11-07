@@ -48,9 +48,12 @@ Use the `voiceover` CLI (package `ai-voiceover-studio`, Python 3.9+) to generate
 ## Other commands
 
 - One line: `voiceover say "text" [--voice <voice id|https://ref.wav>] [--ref-text "..."] [--lang en] -o line.mp3`
-- Faceless video: `voiceover video [--images slides/] --script script.md -o video.mp4 [--style clean|box|bold|minimal] [--size 1080x1920] [--speaker-labels] [--subtitles burn|sidecar|none]`
-  Captions are burned in by default. One image per segment gives exact slide timing; without
-  `--images` a gradient background is used. For Shorts use `--size 1080x1920 --style bold`.
+- Faceless video: `voiceover video --script script.md -o video.mp4 [--vertical] [--style tiktok|clean|bold|minimal|box] [--music ambient|pulse|file] [--images dir/] [--font file.ttf] [--subtitles burn|sidecar|none]`
+  Put `![](path/to/image-or-clip)` above a paragraph to show it while that paragraph is spoken
+  (paths relative to the script); `**bold**` words are highlighted. Word-by-word captions are burned in
+  by default; the first `# heading` becomes a hook card (`--hook`, `--no-hook`). Paragraphs without a
+  picture get kinetic typography. `--music ambient` adds generated, royalty-free music ducked under
+  the voice. For Shorts / Reels / TikTok use `--vertical`. For CJK captions pass a CJK `--font`.
 - Subtitles from speech recognition instead of timing (Miragea): add `--subtitles recognize` (one extra API call).
 - Resume a task after a wait timeout: `voiceover task <task_id> --wait -o out.mp3`.
 

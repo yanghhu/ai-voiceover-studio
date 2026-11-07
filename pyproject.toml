@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-voiceover-studio"
-version = "0.2.0"
+version = "0.3.0"
 description = "AI voiceover studio: text to speech, voice cloning, multi-speaker scripts, subtitles and faceless YouTube videos from the command line."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -14,6 +14,7 @@ keywords = [
   "ai voiceover", "text to speech", "tts", "voice cloning", "youtube", "faceless video",
   "dubbing", "subtitles", "narration", "srt", "voiceover generator", "ai narrator",
   "edge-tts", "ken burns", "captions", "youtube shorts", "free tts",
+  "tiktok captions", "karaoke subtitles", "b-roll", "background music", "kinetic typography",
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",

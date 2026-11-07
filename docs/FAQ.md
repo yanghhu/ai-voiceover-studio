@@ -23,7 +23,7 @@ Python 3.9 or newer and, for MP3 output and videos, [ffmpeg](https://ffmpeg.org)
 2. Run `voiceover script script.md --voices voices.json -o out/`.
 3. Put `out/voiceover.mp3` on your video editor's timeline.
 4. Upload `out/voiceover.srt` in YouTube Studio under *Subtitles*.
-For a video with no editing, run `voiceover video --images slides/ --script script.md -o video.mp4`.
+For a video with no editing, add `![](image.jpg)` lines above the paragraphs and run `voiceover video --script script.md --music ambient -o video.mp4`.
 
 ### How do I turn a single sentence into speech?
 Run `voiceover say "Your sentence" -o line.mp3`. A voice is picked from the language of the text; choose one with `--voice`, e.g. `--voice en-GB-SoniaNeural` (list them with `voiceover voices --provider edge --filter en-GB`) or a Miragea actor id from `voiceover voices`.
@@ -74,21 +74,30 @@ By default (`--subtitles timing`) cues come from the sentence boundaries the eng
 SRT, which YouTube, most video editors and players accept. Cues are split at sentence and clause boundaries and wrapped to at most two lines, with CJK-aware line breaking.
 
 ### Can subtitles be burned into the video?
-Yes, and it is the default for `voiceover video`: captions are burned in with a style preset (`--style clean|box|bold|minimal`, optional `--speaker-labels`) and an `.srt` is written next to the MP4 as well. This needs ffmpeg with libass. Use `--subtitles sidecar` for the `.srt` only. Chinese, Japanese and Korean captions need a CJK font installed (for example `fonts-noto-cjk`); `voiceover doctor` checks for one.
+Yes, and it is the default for `voiceover video`: captions are burned in with a style preset (`--style tiktok|clean|bold|minimal|box`; the animated styles highlight each word as it is spoken) and an `.srt` is written next to the MP4 as well. This needs ffmpeg with libass. Use `--subtitles sidecar` for the `.srt` only. Chinese, Japanese and Korean captions need a CJK font installed (for example `fonts-noto-cjk`); `voiceover doctor` checks for one.
 
 ## Faceless videos
 
 ### How do I make a faceless YouTube video?
-Put your images in a folder and run `voiceover video --images slides/ --script script.md -o video.mp4`. Images are shown in file-name order with a slow Ken Burns zoom and soft cross-fades. Without `--images`, a gradient background and a title card from the script's first heading are used. Rendering is done by ffmpeg; no Python video library is needed.
+Write `![](broll/shot1.jpg)` (an image or a video clip) above each paragraph of the script and run `voiceover video --script script.md --music ambient -o video.mp4`. Each picture is shown exactly while its paragraph is spoken, with Ken Burns motion, slide / zoom / fade transitions, a light film grade, an animated hook card from the script's first heading and word-by-word captions. `--images folder/` still works for paragraphs without their own picture. Rendering is done by ffmpeg; no Python video library is needed. See `examples/demo.en.md`.
 
 ### How is each image timed?
-If the number of images equals the number of script segments, each image is shown exactly while its segment is spoken. Otherwise the audio length is divided evenly between images.
+B-roll written in the script follows its paragraph; several images in one paragraph share its time, and video clips are trimmed or looped. With only `--images`, each image follows one segment when the counts match, otherwise the audio length is divided evenly.
+
+### What if I have no images at all?
+Parts without a picture get an animated gradient with the paragraph's key phrase in large kinetic type (the first `**bold**` phrase, or the strongest words of its first sentence), so a plain script still gives a watchable video.
+
+### How do the word-by-word captions work?
+The edge engine reports when each word is spoken, and captions highlight words in that rhythm: `tiktok` pops the spoken word in yellow, `bold` reveals huge words one by one, `clean` softly highlights a calm two-line caption. For engines without word timings the timing is estimated from sentence or paragraph length. Words in `**bold**` and numbers get a keyword colour.
+
+### How do I add background music?
+`--music ambient` (or `pulse`) adds a track that is synthesized by this project's own code at render time, so there is nothing to license. `--music song.mp3` uses your file, looped. The music is levelled, faded in and out and ducked under the voice automatically; adjust with `--music-volume 0-1` or turn ducking off with `--no-duck`.
 
 ### Can I make vertical videos for Shorts, Reels or TikTok?
-Yes: add `--size 1080x1920 --style bold`. Caption size and line length adapt to the frame. `--fit cover` crops images to fill the frame; `--fit contain` places them on a blurred background.
+Yes: add `--vertical` (= `--size 1080x1920`). Captions switch to the `tiktok` style, get larger and stay above the area the apps cover with their buttons. `--fit cover` crops images to fill the frame; `--fit contain` places them on a blurred background.
 
-### Can I turn off the motion or transitions?
-Yes: `--motion none` keeps images still and `--transition 0` uses hard cuts. `--no-progress-bar` and `--no-title` remove the progress line and title card.
+### Can I turn off the motion, transitions or effects?
+Yes: `--motion none` keeps images still, `--transition 0` or `--transition-style cut` uses hard cuts, `--grade none` removes vignette and grain, and `--no-progress-bar` and `--no-hook` remove the progress line and hook card.
 
 ## Engines, API and security
 

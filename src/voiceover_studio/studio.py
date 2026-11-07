@@ -35,6 +35,8 @@ class SegmentResult:
     end: float
     file: Optional[str] = None
     meta: Dict[str, Any] = field(default_factory=dict)
+    visuals: List[str] = field(default_factory=list)
+    emphasis: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -72,7 +74,7 @@ class Studio:
             native = self.provider.native_format
         result = self.provider.synthesize(text, v, audio_format=native)
         path = audiolib.write_raw(result.audio, result.format, str(output))
-        meta = {k: val for k, val in result.meta.items() if k != "sentences"}
+        meta = {k: val for k, val in result.meta.items() if k not in ("sentences", "words")}
         return {"output": path, "voice": v.describe(), **meta}
 
     # -- whole script ----------------------------------------------------------------
@@ -81,7 +83,7 @@ class Studio:
                       default_voice: Optional[Union[str, Voice]] = None,
                       output_name: str = "voiceover.mp3", gap: float = 0.35,
                       subtitles: str = "timing", max_chars: Optional[int] = None,
-                      use_cache: bool = True,
+                      use_cache: bool = True, voice_overrides: Optional[Voice] = None,
                       progress: Optional[Callable[[int, int, Segment], None]] = None) -> RenderResult:
         """Voice every segment, join them, write audio + SRT + manifest.json.
 
@@ -115,7 +117,7 @@ class Studio:
                 auto = self.provider.auto_voice(n, seg_lang or language)
                 if auto is None:
                     break
-                voice_map[name.upper()] = auto
+                voice_map[name.upper()] = auto.merged(voice_overrides) if voice_overrides else auto
                 n += 1
         # Fail fast on missing speakers before spending anything.
         for seg in segments:
@@ -139,29 +141,25 @@ class Studio:
             file = seg_dir / ("%03d_%s_%s.wav" % (seg.index + 1, _slug(seg.speaker), cache_id[:10]))
             timing_file = file.with_suffix(".timing.json")
             meta: Dict[str, Any] = {}
-            sentences: List[Dict[str, Any]] = []
+            timing: Dict[str, Any] = {}
             if use_cache and file.is_file():
                 pcm = audiolib.decode(file.read_bytes(), "wav")
                 meta = {"cached": True}
-                if timing_file.is_file():
-                    try:
-                        sentences = json.loads(timing_file.read_text(encoding="utf-8"))
-                    except ValueError:
-                        sentences = []
+                timing = _read_timing(timing_file)
             else:
                 res = self.provider.synthesize(seg.text, voice, audio_format="wav", cache_key=cache_id)
                 pcm = audiolib.decode(res.audio, res.format)
                 file.write_bytes(audiolib.wav_bytes(pcm.frames, pcm.sample_rate, pcm.channels, pcm.sample_width))
-                meta = {k: v for k, v in res.meta.items() if k != "sentences"}
-                sentences = list(res.meta.get("sentences") or [])
-                if sentences:
-                    timing_file.write_text(json.dumps(sentences, ensure_ascii=False), encoding="utf-8")
-            if sentences:
-                meta["sentences"] = sentences
+                meta = {k: v for k, v in res.meta.items() if k not in ("sentences", "words")}
+                timing = {k: list(res.meta.get(k) or []) for k in ("sentences", "words") if res.meta.get(k)}
+                if timing:
+                    timing_file.write_text(json.dumps(timing, ensure_ascii=False), encoding="utf-8")
+            meta.update(timing)
             start = cursor + (lead if n == 1 else 0.0)
             pause = gap + seg.pause_after if n < len(voiced) else seg.pause_after
             results.append(SegmentResult(seg.index, seg.speaker, seg.text, voice.describe(),
-                                         round(start, 3), round(start + pcm.duration, 3), str(file), meta))
+                                         round(start, 3), round(start + pcm.duration, 3), str(file), meta,
+                                         list(seg.visuals), list(seg.emphasis)))
             cursor = start + pcm.duration + pause
             clips.append(pcm)
             gaps.append(pause)
@@ -194,6 +192,22 @@ class Studio:
             "subtitles": srt_path, "subtitle_source": source, "duration": round(mix.duration, 3),
             "segments": [asdict(r) for r in results]}, ensure_ascii=False, indent=2), encoding="utf-8")
         return RenderResult(audio_path, srt_path, str(manifest), mix.duration, results, source)
+
+
+def _read_timing(path: Path) -> Dict[str, Any]:
+    """Cached engine timings: ``{"sentences": [...], "words": [...]}`` (a bare list is the
+    sentence list written by older versions)."""
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError:
+        return {}
+    if isinstance(data, list):
+        return {"sentences": data} if data else {}
+    if isinstance(data, dict):
+        return {k: data[k] for k in ("sentences", "words") if isinstance(data.get(k), list) and data[k]}
+    return {}
 
 
 def _guess_language(text: str) -> str:

@@ -116,3 +116,34 @@ def test_missing_package_message(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     with pytest.raises(ConfigError, match=r"\[edge\]"):
         EdgeProvider()
+
+
+class WordCommunicate:
+    """Newer edge-tts: accepts ``boundary`` and then reports word boundaries only."""
+
+    seen = {}
+
+    def __init__(self, text, voice, rate="+0%", boundary="SentenceBoundary", **kwargs):
+        WordCommunicate.seen = {"boundary": boundary}
+        self.text = text
+
+    async def stream(self):
+        yield {"type": "WordBoundary", "offset": 1_000_000, "duration": 3_000_000, "text": "Hello"}
+        yield {"type": "WordBoundary", "offset": 4_000_000, "duration": 3_000_000, "text": "world"}
+        yield {"type": "WordBoundary", "offset": 9_000_000, "duration": 2_000_000, "text": "Bye"}
+        yield {"type": "audio", "data": SILENCE}
+
+
+def test_word_boundaries_when_supported():
+    res = EdgeProvider(communicate=WordCommunicate, sleep=lambda s: None).synthesize("Hello, world. Bye!", Voice())
+    assert WordCommunicate.seen["boundary"] == "WordBoundary"
+    assert [w["text"] for w in res.meta["words"]] == ["Hello", "world", "Bye"]
+    assert res.meta["sentences"] == [{"start": 0.1, "end": 0.7, "text": "Hello, world."},
+                                     {"start": 0.9, "end": 1.1, "text": "Bye!"}]
+
+
+def test_cli_speed_applies_to_auto_voices(edge, tmp_path):
+    script = tmp_path / "s.md"
+    script.write_text("Hello there.", encoding="utf-8")
+    Studio(edge).render_script(script, tmp_path / "out", output_name="m.wav", voice_overrides=Voice(speed=1.2))
+    assert FakeCommunicate.calls[-1].kwargs["rate"] == "+20%"

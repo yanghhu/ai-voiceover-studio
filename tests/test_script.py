@@ -50,3 +50,11 @@ def test_split_long_text():
 
 def test_clean_markdown():
     assert clean_markdown("- **bold** and `code` ![img](a.png)") == "bold and code"
+
+
+def test_broll_and_emphasis():
+    segs = parse_script("![](intro.mp4)\n\n![a](one.jpg)\nFirst **big** line with ![](two.jpg) inline.\n\n"
+                        "[B]: No picture, __bold__ too.")
+    assert segs[0].visuals == ["intro.mp4", "one.jpg", "two.jpg"]
+    assert segs[0].text == "First big line with inline." and segs[0].emphasis == ["big"]
+    assert segs[1].visuals == [] and segs[1].emphasis == ["bold"] and segs[1].speaker == "B"

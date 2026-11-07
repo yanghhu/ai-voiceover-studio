@@ -10,8 +10,14 @@ Format (all optional)::
     [pause 1.5]
     [ALEX](tags=excited, speed=1.1): Per-line options in parentheses.
 
+    ![](broll/city.jpg)
+    A Markdown image sets the B-roll (image or video clip) for its paragraph.
+    **Bold** words become highlighted keywords in the captions.
+
 A blank line ends a paragraph; each paragraph becomes one segment (long ones are
-split at sentence boundaries to respect the provider's text limit).
+split at sentence boundaries to respect the provider's text limit). A paragraph
+that is only images hands them to the next spoken paragraph. Several images in
+one paragraph share its time.
 """
 import re
 from dataclasses import dataclass, field
@@ -21,6 +27,8 @@ DEFAULT_SPEAKER = "NARRATOR"
 
 _TAG = re.compile(r"^\s*(?:[-*]\s+)?\[(?P<name>[^\]\n]{1,40})\]\s*(?:\((?P<opts>[^)]*)\))?\s*:\s*(?P<text>.*)$")
 _PAUSE = re.compile(r"^\s*\[(?:pause|break)\s*(?P<sec>\d+(?:\.\d+)?)?\s*s?\]\s*$", re.I)
+_IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)>\s]+)>?(?:\s+\"[^\"]*\")?\s*\)")
+_EMPHASIS = re.compile(r"(\*\*|__)(?=\S)(.+?)(?<=\S)\1")
 _SENTENCE = re.compile(r"(?<=[.!?。！？…])\s+|(?<=[。！？])")
 
 
@@ -31,6 +39,10 @@ class Segment:
     pause_after: float = 0.0
     options: Dict[str, Any] = field(default_factory=dict)
     index: int = 0
+    #: B-roll for this segment: image or video paths as written in the script.
+    visuals: List[str] = field(default_factory=list)
+    #: Phrases marked **bold** in the script (highlighted in captions).
+    emphasis: List[str] = field(default_factory=list)
 
 
 def clean_markdown(text: str) -> str:
@@ -106,15 +118,24 @@ def parse_script(source: str, *, default_speaker: str = DEFAULT_SPEAKER,
     buffer: List[str] = []
     in_fence = False
     in_comment = False
+    pending_visuals: List[str] = []
 
     def flush() -> None:
-        nonlocal buffer
-        text = clean_markdown(" ".join(buffer))
+        nonlocal buffer, pending_visuals
+        raw = " ".join(buffer)
         buffer = []
+        visuals = _IMAGE.findall(raw)
+        emphasis = [clean_markdown(m[1]) for m in _EMPHASIS.findall(raw)]
+        text = clean_markdown(raw)
         if not text:
+            pending_visuals += visuals
             return
-        for chunk in split_text(text, max_chars):
-            segments.append(Segment(speaker, chunk, options=dict(options)))
+        visuals = pending_visuals + visuals
+        pending_visuals = []
+        for n, chunk in enumerate(split_text(text, max_chars)):
+            segments.append(Segment(speaker, chunk, options=dict(options),
+                                    visuals=visuals if n == 0 else [],
+                                    emphasis=[e for e in emphasis if e and e in chunk]))
 
     for line in source.splitlines():
         stripped = line.strip()

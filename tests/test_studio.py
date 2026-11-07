@@ -180,4 +180,45 @@ def test_video_without_images(tmp_path):
     script.write_text("# Hello\n\nJust a script, no pictures.", encoding="utf-8")
     out = render_video(Studio("dummy"), None, script, tmp_path / "v.mp4", size=(320, 180), fps=10,
                        motion="none", transition=0)
-    assert out["images"] == 1 and (tmp_path / "v.mp4").stat().st_size > 0
+    assert out["images"] == 0 and out["shots"] == 1 and (tmp_path / "v.mp4").stat().st_size > 0
+
+
+@pytest.mark.skipif(not _ffmpeg_with("ass", "xfade", "zoompan", "sidechaincompress"),
+                    reason="needs ffmpeg with libass")
+def test_video_with_broll_music_and_tiktok_captions(tmp_path):
+    import subprocess
+    from voiceover_studio.video import render_video
+    (tmp_path / "broll").mkdir()
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x305080:s=360x640",
+                    "-frames:v", "1", str(tmp_path / "broll" / "a.png")], check=True)
+    script = tmp_path / "s.md"
+    script.write_text("# Hook line\n\n![](broll/a.png)\nFirst **fact** here.\n\nSecond part has no picture.",
+                      encoding="utf-8")
+    out = render_video(Studio("dummy"), None, script, tmp_path / "v.mp4", size=(180, 320), fps=10,
+                       music="ambient")
+    assert out["style"] == "tiktok" and out["shots"] == 2 and out["images"] == 1
+    assert out["music"] == "ambient" and (tmp_path / "v.mp4").stat().st_size > 0
+    streams = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0",
+                              str(tmp_path / "v.mp4")], stdout=subprocess.PIPE).stdout.decode().split()
+    assert streams == ["video", "audio"]
+
+
+def test_timing_cache_formats(tmp_path):
+    from voiceover_studio.studio import _read_timing
+    f = tmp_path / "t.json"
+    assert _read_timing(f) == {}
+    f.write_text('[{"start": 0, "end": 1, "text": "Hi."}]', encoding="utf-8")
+    assert list(_read_timing(f)) == ["sentences"]           # cache written by v0.2
+    f.write_text('{"sentences": [], "words": [{"start": 0, "end": 1, "text": "Hi"}]}', encoding="utf-8")
+    assert list(_read_timing(f)) == ["words"]
+    f.write_text("not json", encoding="utf-8")
+    assert _read_timing(f) == {}
+
+
+def test_segments_carry_broll_and_emphasis(tmp_path):
+    script = tmp_path / "s.md"
+    script.write_text("![](a.jpg)\n\nThe **big** idea.", encoding="utf-8")
+    result = Studio(DummyProvider()).render_script(script, tmp_path / "out", output_name="m.wav")
+    seg = result.segments[0]
+    assert seg.visuals == ["a.jpg"] and seg.emphasis == ["big"] and seg.text == "The big idea."
+    assert json.load(open(result.manifest_path))["segments"][0]["visuals"] == ["a.jpg"]

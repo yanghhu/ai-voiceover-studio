@@ -25,5 +25,7 @@ jobs:
         run: voiceover doctor
       - name: Dry run (offline dummy provider)
         run: voiceover script examples/script.md --dry-run -o out/ --name voiceover.wav
-      - name: Dry-run video (ffmpeg, captions, Ken Burns)
-        run: voiceover video --dry-run --images examples/slides --script examples/script.md -o out/video.mp4 --size 640x360 --fps 15
+      - name: Dry-run video (B-roll, Ken Burns, animated captions, music)
+        run: voiceover video --dry-run --script examples/demo.en.md -o out/video.mp4 --size 640x360 --fps 15 --style tiktok --music ambient
+      - name: Dry-run vertical Short and kinetic typography (no pictures)
+        run: voiceover video --dry-run --script examples/script.md -o out/short.mp4 --size 360x640 --fps 15

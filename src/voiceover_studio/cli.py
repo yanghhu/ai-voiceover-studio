@@ -2,7 +2,8 @@
 
     voiceover say "Hello world" -o hello.mp3
     voiceover script script.md -o out/
-    voiceover video --images slides/ --script script.md -o video.mp4
+    voiceover video --script script.md -o video.mp4 --music ambient
+    voiceover video --script short.md --vertical --style tiktok -o short.mp4
     voiceover voices --provider edge --filter en-GB
     voiceover doctor
     voiceover task TASK_ID --wait -o result.mp3        (miragea)
@@ -84,25 +85,40 @@ def build_parser() -> argparse.ArgumentParser:
 
     video = sub.add_parser("video", parents=[common, voice_opts], help="faceless video with motion and "
                            "styled captions (needs ffmpeg)")
-    video.add_argument("--images", type=Path, help="folder of images, used in name order (default: "
-                       "animated gradient background)")
+    video.add_argument("--images", type=Path, help="folder of images / clips, used in name order for "
+                       "segments without ![](b-roll) in the script (default: kinetic text on an animated "
+                       "gradient)")
     video.add_argument("--script", type=Path, required=True)
     video.add_argument("-o", "--output", type=Path, default=Path("video.mp4"))
     _script_args(video)
     video.add_argument("--size", type=_size, default=(1920, 1080), help="e.g. 1920x1080 or 1080x1920 (Shorts)")
+    video.add_argument("--vertical", action="store_true", help="shortcut for --size 1080x1920")
     video.add_argument("--fps", type=int, default=30)
     video.add_argument("--fit", choices=("cover", "contain"), default="cover")
     video.add_argument("--subtitles", choices=("burn", "sidecar", "none"), default="burn",
-                       help="burn styled captions into the video (default; an .srt is written too), "
+                       help="burn animated captions into the video (default; an .srt is written too), "
                        "sidecar .srt only, or none")
     video.add_argument("--subtitle-source", choices=("timing", "recognize"), default="timing")
-    video.add_argument("--style", choices=("clean", "box", "bold", "minimal"), default="clean",
-                       help="caption style (bold suits vertical Shorts)")
+    video.add_argument("--style", choices=("auto", "tiktok", "bold", "clean", "minimal", "box"), default="auto",
+                       help="caption style: tiktok (word-by-word pop, default for vertical), bold, clean "
+                       "(default for landscape), minimal, box")
     video.add_argument("--motion", choices=("kenburns", "none"), default="kenburns")
-    video.add_argument("--transition", type=float, default=0.5, help="cross-fade seconds (0 = cut)")
-    video.add_argument("--title", help="title card text (default: the script's first # heading, shown when no --images are given)")
-    video.add_argument("--no-title", action="store_true")
-    video.add_argument("--speaker-labels", action="store_true", help="show the speaker name above captions")
+    video.add_argument("--transition", type=float, default=0.5, help="transition seconds (0 = cut)")
+    video.add_argument("--transition-style", choices=("mix", "fade", "slide", "zoom", "cut"), default="mix",
+                       help="mix (slide/zoom/fade, default), fade, slide, zoom or cut")
+    video.add_argument("--grade", choices=("cinematic", "none"), default="cinematic",
+                       help="cinematic: gentle contrast, vignette and film grain (default)")
+    video.add_argument("--hook", "--title", dest="title", help="hook card text for the first seconds "
+                       "(default: the script's first # heading)")
+    video.add_argument("--hook-seconds", type=float, default=2.2)
+    video.add_argument("--no-hook", "--no-title", dest="no_title", action="store_true")
+    video.add_argument("--music", help="background music: ambient or pulse (built in, generated, "
+                       "royalty-free) or a path to an audio file; ducked under the voice")
+    video.add_argument("--music-volume", type=float, default=0.5,
+                       help="music level, 0-1 (default 0.5); the track is levelled first")
+    video.add_argument("--no-duck", action="store_true", help="do not lower the music while speaking")
+    video.add_argument("--speaker-labels", action="store_true",
+                       help="show the speaker name above captions (static styles)")
     video.add_argument("--no-progress-bar", action="store_true")
     video.add_argument("--font", help="caption font family or .ttf/.otf path (CJK: e.g. 'Noto Sans SC')")
 
@@ -182,7 +198,8 @@ def cmd_script(args: argparse.Namespace) -> int:
 
     result = studio.render_script(args.script, args.outdir, voices=voices, default_voice=default,
                                   output_name=args.name, gap=args.gap, subtitles=args.subtitles,
-                                  max_chars=args.max_chars, use_cache=not args.fresh, progress=progress)
+                                  max_chars=args.max_chars, use_cache=not args.fresh,
+                                  voice_overrides=overrides, progress=progress)
     data = {"audio": result.audio_path, "subtitles": result.srt_path, "manifest": result.manifest_path,
             "duration": round(result.duration, 2), "segments": len(result.segments),
             "subtitle_source": result.subtitle_source, "provider": studio.provider.name}
@@ -230,16 +247,21 @@ def cmd_video(args: argparse.Namespace) -> int:
                   file=sys.stderr)
 
     title = False if args.no_title else (args.title or "auto")
+    size = (1080, 1920) if args.vertical else args.size
     result = render_video(studio, args.images, args.script, args.output, voices=voices,
-                          default_voice=default, size=args.size, fps=args.fps, subtitles=args.subtitles,
+                          default_voice=default, size=size, fps=args.fps, subtitles=args.subtitles,
                           fit=args.fit, subtitle_source=args.subtitle_source, style=args.style,
-                          motion=args.motion, transition=args.transition, title=title,
-                          speaker_labels=args.speaker_labels, progress_bar=not args.no_progress_bar,
-                          font=args.font, gap=args.gap, max_chars=args.max_chars,
-                          use_cache=not args.fresh, progress=progress)
+                          motion=args.motion, transition=args.transition,
+                          transition_style=args.transition_style, title=title,
+                          hook_seconds=args.hook_seconds, speaker_labels=args.speaker_labels,
+                          progress_bar=not args.no_progress_bar, font=args.font, music=args.music,
+                          music_volume=args.music_volume, duck=not args.no_duck, grade=args.grade,
+                          gap=args.gap, max_chars=args.max_chars, use_cache=not args.fresh,
+                          voice_overrides=overrides, progress=progress)
     result["provider"] = studio.provider.name
-    _emit(args, result, "Video:     %s (%.1fs, %d images, %s captions)\nAudio:     %s\nSubtitles: %s" % (
-        result["video"], result["duration"], result["images"], result["style"], result["audio"],
+    _emit(args, result, "Video:     %s (%.1fs, %d shots, %s captions%s)\nAudio:     %s\nSubtitles: %s" % (
+        result["video"], result["duration"], result["shots"], result["style"],
+        ", music: %s" % result["music"] if result.get("music") else "", result["audio"],
         result["subtitles"] or "-"))
     return 0
 
