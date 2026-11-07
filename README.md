@@ -3,7 +3,7 @@
 
 <div align="center">
 
-**English** · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [Español](README.es.md)
+**English** · [简体中文](https://github.com/yanghhu/ai-voiceover-studio/blob/main/README.zh-CN.md) · [日本語](https://github.com/yanghhu/ai-voiceover-studio/blob/main/README.ja.md) · [Español](https://github.com/yanghhu/ai-voiceover-studio/blob/main/README.es.md)
 
 [![Tests](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
@@ -13,16 +13,16 @@
 
 <table>
 <tr>
-<td align="center"><img src="docs/assets/demo.gif" alt="16:9 faceless YouTube video made from examples/demo.en.md: cinematic B-roll with Ken Burns motion, an animated hook card and word-by-word TikTok-style captions" width="560"></td>
-<td align="center"><img src="docs/assets/demo-short-zh.gif" alt="9:16 Chinese Short made from examples/demo.zh.md: space B-roll with large word-by-word captions" width="200"></td>
+<td align="center"><img src="https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/assets/demo.gif" alt="16:9 faceless YouTube video made from examples/demo.en.md: cinematic B-roll with Ken Burns motion, an animated hook card and word-by-word TikTok-style captions" width="560"></td>
+<td align="center"><img src="https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/assets/demo-short-zh.gif" alt="9:16 Chinese Short made from examples/demo.zh.md: space B-roll with large word-by-word captions" width="200"></td>
 </tr>
 <tr>
-<td align="center"><sub>16:9 YouTube · <a href="docs/assets/demo.mp4">full video with sound (MP4, 34 s)</a></sub></td>
-<td align="center"><sub>9:16 Short · <a href="docs/assets/demo-short-zh.mp4">MP4, 23 s</a></sub></td>
+<td align="center"><sub>16:9 YouTube · <a href="https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/assets/demo.mp4">full video with sound (MP4, 34 s)</a></sub></td>
+<td align="center"><sub>9:16 Short · <a href="https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/assets/demo-short-zh.mp4">MP4, 23 s</a></sub></td>
 </tr>
 </table>
 
-<sub>Real output of one command each, unedited: free Edge voice, generated ambient music ducked under the voice, B-roll from <a href="examples/broll">examples/broll</a> · <a href="docs/assets/sample-voiceover.mp3">voiceover only (MP3)</a> · <a href="docs/assets/sample-voiceover.srt">subtitles (SRT)</a></sub>
+<sub>Real output of one command each, unedited: free Edge voice, generated ambient music ducked under the voice, B-roll from <a href="https://github.com/yanghhu/ai-voiceover-studio/blob/main/examples/broll">examples/broll</a> · <a href="https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/assets/sample-voiceover.mp3">voiceover only (MP3)</a> · <a href="https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/assets/sample-voiceover.srt">subtitles (SRT)</a></sub>
 
 </div>
 
@@ -64,11 +64,11 @@ Each guide has a copy-paste command that runs on the bundled examples.
 
 | Use case | What you get | Guide |
 | --- | --- | --- |
-| Faceless YouTube video | 16:9 narrated video with B-roll, captions and music from one script | [docs/use-cases/faceless-youtube.md](docs/use-cases/faceless-youtube.md) |
-| Shorts / Reels / TikTok | 9:16 video with large TikTok-style word-by-word captions in the safe area | [docs/use-cases/shorts-reels-tiktok.md](docs/use-cases/shorts-reels-tiktok.md) |
-| Explainer and movie-recap narration | Narration over your own clips or slides, timed paragraph by paragraph | [docs/use-cases/explainer-and-recap-narration.md](docs/use-cases/explainer-and-recap-narration.md) |
-| Multilingual dubbing | The same video voiced in several languages from translated scripts | [docs/use-cases/multilingual-dubbing.md](docs/use-cases/multilingual-dubbing.md) |
-| Podcast and audiobook snippets | Multi-voice audio clips (intros, trailers, sample chapters) with SRT | [docs/use-cases/podcast-and-audiobook-snippets.md](docs/use-cases/podcast-and-audiobook-snippets.md) |
+| Faceless YouTube video | 16:9 narrated video with B-roll, captions and music from one script | [docs/use-cases/faceless-youtube.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/use-cases/faceless-youtube.md) |
+| Shorts / Reels / TikTok | 9:16 video with large TikTok-style word-by-word captions in the safe area | [docs/use-cases/shorts-reels-tiktok.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/use-cases/shorts-reels-tiktok.md) |
+| Explainer and movie-recap narration | Narration over your own clips or slides, timed paragraph by paragraph | [docs/use-cases/explainer-and-recap-narration.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/use-cases/explainer-and-recap-narration.md) |
+| Multilingual dubbing | The same video voiced in several languages from translated scripts | [docs/use-cases/multilingual-dubbing.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/use-cases/multilingual-dubbing.md) |
+| Podcast and audiobook snippets | Multi-voice audio clips (intros, trailers, sample chapters) with SRT | [docs/use-cases/podcast-and-audiobook-snippets.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/use-cases/podcast-and-audiobook-snippets.md) |
 
 ## Table of contents
 
@@ -101,7 +101,7 @@ Most voiceover workflows for YouTube explainers, tutorials and faceless channels
 | --- | --- |
 | 🆓 **Works without signup** | free Microsoft Edge neural voices via `edge-tts` are the default engine — 300+ voices, 70+ languages |
 | 🎭 **Multi-speaker scripts** | `[NARRATOR]:` / `[ALEX]:` lines in Markdown or TXT; each speaker gets its own voice automatically, or map them in `voices.json` |
-| 🎞️ **Faceless video** | B-roll per paragraph (`![](clip.mp4)` in the script) → MP4 with Ken Burns motion, slide / zoom / fade transitions, a light film grade and an animated hook card |
+| 🎞️ **Faceless video** | B-roll per paragraph (`![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/clip.mp4)` in the script) → MP4 with Ken Burns motion, slide / zoom / fade transitions, a light film grade and an animated hook card |
 | 🔤 **Animated captions** | TikTok / CapCut-style word-by-word highlight from real word timings, pop-in, keyword colours (`**bold**` in the script), safe areas for 9:16 and 16:9 |
 | 🎵 **Music with ducking** | built-in generated ambient tracks (no licence issues) or your own file, lowered automatically while the voice speaks |
 | ✨ **No pictures? Still good** | parts without B-roll get an animated gradient with large kinetic typography of the key phrase |
@@ -137,16 +137,16 @@ Write the script the way you would read it:
 [NARRATOR]: Look up on a clear day and the sky is blue. But sunlight is white.
 So where does the blue come from?
 
-[ALEX](tags=curious): Wait — sunlight is white? It looks yellow to me.
+[ALEX](https://github.com/yanghhu/ai-voiceover-studio/tree/main/tags=curious): Wait — sunlight is white? It looks yellow to me.
 
 [pause 0.8]
 
-[ALEX](speed=1.05): So blue light bounces all over the sky!
+[ALEX](https://github.com/yanghhu/ai-voiceover-studio/blob/main/speed=1.05): So blue light bounces all over the sky!
 ```
 
 Rules: a `[NAME]:` tag sets the speaker; untagged lines continue with the current speaker; a blank line starts a new segment; `[pause 1.5]` inserts silence; `(tags=a|b, speed=1.1, model=..., lang=...)` sets per-line options. Headings, HTML comments, code blocks and tables are skipped, and Markdown emphasis and links are read as plain text. Long paragraphs are split at sentence boundaries to stay within the engine's per-request text limit.
 
-Without a voices file each speaker gets a distinct voice for the script's language (for example Andrew and Ava for English, Yunxi and Xiaoxiao for Chinese). To choose voices yourself, map speakers in `voices.json` (see [examples/voices.example.json](examples/voices.example.json)):
+Without a voices file each speaker gets a distinct voice for the script's language (for example Andrew and Ava for English, Yunxi and Xiaoxiao for Chinese). To choose voices yourself, map speakers in `voices.json` (see [examples/voices.example.json](https://github.com/yanghhu/ai-voiceover-studio/blob/main/examples/voices.example.json)):
 
 ```json
 {
@@ -209,10 +209,10 @@ Put the B-roll right in the script. A Markdown image line sets the picture or cl
 ```markdown
 # Cleopatra vs. the Moon landing
 
-![](broll/en/01-pyramid.jpg)
+![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/broll/en/01-pyramid.jpg)
 Cleopatra lived closer to the **Moon landing** than to the building of the Great Pyramid.
 
-![](broll/en/02-build.jpg)
+![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/broll/en/02-build.jpg)
 The pyramid at Giza was finished around 2560 BC. Cleopatra was born about **2,500 years** later.
 ```
 
@@ -227,8 +227,8 @@ What happens: each paragraph is voiced; its B-roll is shown exactly while it is 
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `![](file)` in the script | — | B-roll (image or video clip) for that paragraph; paths are relative to the script |
-| `--images DIR` | — | images / clips for paragraphs without `![](...)`, in file-name order |
+| `![](https://github.com/yanghhu/ai-voiceover-studio/tree/main/file)` in the script | — | B-roll (image or video clip) for that paragraph; paths are relative to the script |
+| `--images DIR` | — | images / clips for paragraphs without `![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/...)`, in file-name order |
 | `--style tiktok\|clean\|bold\|minimal\|box` | `tiktok` vertical, `clean` landscape | `tiktok`: 1–4 big words, spoken word pops in yellow, keywords green · `bold`: huge words revealed as spoken · `clean`: calm two-line captions with a soft highlight · `minimal` / `box`: static lines |
 | `--music ambient\|pulse\|FILE` | none | background music; `ambient` and `pulse` are generated by this project at render time (royalty-free), or any audio file (looped) |
 | `--music-volume 0-1` | `0.5` | music level after loudness levelling |
@@ -246,7 +246,7 @@ What happens: each paragraph is voiced; its B-roll is shown exactly while it is 
 
 Without any pictures the video is not an empty gradient: each paragraph gets an animated colour field with its key phrase (the first `**bold**` phrase, or the strongest words of its first sentence) building up in large type.
 
-Everything is rendered by one ffmpeg call (zoompan, xfade, libass, sidechaincompress), so there is no Python video dependency; the 34-second 1080p demo renders in about 80 seconds on two CPU cores. The demo B-roll in [`examples/broll`](examples/broll) was generated for this project and is free to reuse under the repository licence.
+Everything is rendered by one ffmpeg call (zoompan, xfade, libass, sidechaincompress), so there is no Python video dependency; the 34-second 1080p demo renders in about 80 seconds on two CPU cores. The demo B-roll in [`examples/broll`](https://github.com/yanghhu/ai-voiceover-studio/tree/main/examples/broll) was generated for this project and is free to reuse under the repository licence.
 
 ## Use it from Python
 
@@ -273,7 +273,7 @@ Errors are typed: `ConfigError` (bad input), `ProviderError` (HTTP/API error wit
 
 ## Use it from an AI coding agent
 
-[`skills/ai-voiceover/SKILL.md`](skills/ai-voiceover/SKILL.md) is a drop-in skill for Claude Code, Codex, Cursor and similar agents. Copy the folder into your agent's skills directory (for example `~/.claude/skills/` or `.cursor/skills/`), or point the agent at it, then ask: *"Voice `script.md` and make a captioned video from the images in `slides/`."* Every command supports `--json` and stable exit codes (`0` ok, `1` task failed, `2` usage/API error).
+[`skills/ai-voiceover/SKILL.md`](https://github.com/yanghhu/ai-voiceover-studio/blob/main/skills/ai-voiceover/SKILL.md) is a drop-in skill for Claude Code, Codex, Cursor and similar agents. Copy the folder into your agent's skills directory (for example `~/.claude/skills/` or `.cursor/skills/`), or point the agent at it, then ask: *"Voice `script.md` and make a captioned video from the images in `slides/`."* Every command supports `--json` and stable exit codes (`0` ok, `1` task failed, `2` usage/API error).
 
 ## Architecture
 
@@ -361,13 +361,13 @@ If you need a full timeline editor or lip-sync, use an editor alongside this too
 
 ## FAQ
 
-More answers in [docs/FAQ.md](docs/FAQ.md).
+More answers in [docs/FAQ.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/FAQ.md).
 
 **Do I need an API key?**
 No. The default `edge` engine uses free online neural voices with no account. `--dry-run` works fully offline with silent audio. A Miragea key adds voice cloning and expressive voices; an OpenAI key adds OpenAI voices.
 
 **How do I add AI voiceover to a YouTube video?**
-Write your narration in a Markdown file, run `voiceover script script.md -o out/`, then drop `out/voiceover.mp3` onto your editor's timeline and upload `out/voiceover.srt` as YouTube subtitles. For a captioned video with no editing at all, add `![](image.jpg)` lines to the script and run `voiceover video --script script.md --music ambient -o video.mp4`.
+Write your narration in a Markdown file, run `voiceover script script.md -o out/`, then drop `out/voiceover.mp3` onto your editor's timeline and upload `out/voiceover.srt` as YouTube subtitles. For a captioned video with no editing at all, add `![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/image.jpg)` lines to the script and run `voiceover video --script script.md --music ambient -o video.mp4`.
 
 **Can I make vertical Shorts / Reels?**
 Yes: `--vertical`. Captions switch to the word-by-word `tiktok` style, get larger, and stay above the area the apps cover with buttons.
@@ -393,7 +393,7 @@ Run `voiceover doctor` (add `--online` to synthesize one test line). It checks P
 - [x] Free default engine (edge) and OpenAI engine
 - [x] Ken Burns motion, cross-fades and caption style presets
 - [x] `voiceover doctor`
-- [x] Inline B-roll in the script (`![](clip.mp4)`) timed to each paragraph
+- [x] Inline B-roll in the script (`![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/clip.mp4)`) timed to each paragraph
 - [x] Background music with automatic ducking (built-in generated tracks)
 - [x] Word-by-word (karaoke) animated captions, hook card, kinetic typography
 - [ ] Stock-footage search for B-roll by keyword
@@ -405,17 +405,17 @@ Ideas and votes welcome in [Issues](https://github.com/yanghhu/ai-voiceover-stud
 
 ## Contributing
 
-Contributions are welcome — bug reports, docs, new providers and features alike. See [CONTRIBUTING.md](CONTRIBUTING.md). In short:
+Contributions are welcome — bug reports, docs, new providers and features alike. See [CONTRIBUTING.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/CONTRIBUTING.md). In short:
 
 ```bash
 pip install -e ".[dev,edge,yaml]"
 pytest                      # fully offline: engines and HTTP are mocked, no key needed
 ```
 
-Keep the core dependency-free, add tests with mocked network calls, and never commit keys or generated media (except the curated demo files in `docs/assets/`). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) and report security issues as described in [SECURITY.md](SECURITY.md).
+Keep the core dependency-free, add tests with mocked network calls, and never commit keys or generated media (except the curated demo files in `docs/assets/`). Please follow the [Code of Conduct](https://github.com/yanghhu/ai-voiceover-studio/blob/main/CODE_OF_CONDUCT.md) and report security issues as described in [SECURITY.md](https://github.com/yanghhu/ai-voiceover-studio/blob/main/SECURITY.md).
 
-If you use AI Voiceover Studio in research or a publication, cite it with [CITATION.cff](CITATION.cff) (GitHub's *Cite this repository* button).
+If you use AI Voiceover Studio in research or a publication, cite it with [CITATION.cff](https://github.com/yanghhu/ai-voiceover-studio/blob/main/CITATION.cff) (GitHub's *Cite this repository* button).
 
 ## License
 
-[MIT](LICENSE) © 2026 Miragea contributors. Generated voices are subject to the terms of the engine you use; respect the rights of the people whose voices you clone.
+[MIT](https://github.com/yanghhu/ai-voiceover-studio/tree/main/LICENSE) © 2026 Miragea contributors. Generated voices are subject to the terms of the engine you use; respect the rights of the people whose voices you clone.
