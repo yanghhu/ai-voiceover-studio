@@ -94,9 +94,13 @@ def mix_filter(voice: str, music: str, out: str, *, duration: float, volume: flo
         # soft room: a short multi-tap echo and a gentle low-pass round the pure tones off
         music_chain += ",lowpass=f=3200,aecho=0.8:0.6:90|170|260:0.35|0.25|0.15"
     music_chain += ",loudnorm=I=%.1f:TP=-2:LRA=11,aresample=44100" % MUSIC_LUFS
-    music_chain += ",volume=%.3f,afade=t=in:d=1.5,afade=t=out:st=%.3f:d=2.5[mus]" % (volume, fade_out)
+    # one explicit sample format on both sides: older ffmpeg (4.x) cannot negotiate it for
+    # sidechaincompress on its own
+    music_chain += (",volume=%.3f,afade=t=in:d=1.5,afade=t=out:st=%.3f:d=2.5,"
+                    "aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[mus]" % (volume, fade_out))
     chain.append(music_chain)
-    chain.append("[%s]aformat=sample_rates=44100:channel_layouts=stereo,asplit=2[vo][sc]" % voice)
+    chain.append("[%s]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,asplit=2[vo][sc]"
+                 % voice)
     if duck:
         chain.append("[mus][sc]sidechaincompress=threshold=0.015:ratio=9:attack=25:release=450:"
                      "makeup=1[duck]")
