@@ -1,6 +1,13 @@
 """Voice providers.
 
-Built in: ``miragea`` (default, remote) and ``dummy`` (offline silence).
+Built in:
+
+* ``edge``    free Microsoft Edge neural voices (``pip install "ai-voiceover-studio[edge]"``),
+              the default when no ``MIRAGEA_API_KEY`` is set
+* ``miragea`` Miragea API: voice cloning, expressive models, subtitle recognition
+* ``openai``  OpenAI text to speech (``OPENAI_API_KEY``)
+* ``dummy``   offline silence with realistic timing, for tests and ``--dry-run``
+
 Third-party packages can register more under the entry-point group
 ``ai_voiceover_studio.providers``::
 
@@ -8,6 +15,8 @@ Third-party packages can register more under the entry-point group
     myengine = "my_package.provider:MyProvider"
 """
 from typing import Any, Callable, Dict
+import importlib.util
+import os
 
 from ..errors import ConfigError
 from .base import SynthesisResult, TranscriptSegment, Voice, VoiceInfo, VoiceProvider
@@ -25,7 +34,33 @@ def _dummy(**kwargs: Any) -> VoiceProvider:
     return DummyProvider(**kwargs)
 
 
-BUILTIN: Dict[str, Callable[..., VoiceProvider]] = {"miragea": _miragea, "dummy": _dummy}
+def _edge(**kwargs: Any) -> VoiceProvider:
+    from .edge import EdgeProvider
+    return EdgeProvider(**kwargs)
+
+
+def _openai(**kwargs: Any) -> VoiceProvider:
+    from .openai import OpenAIProvider
+    return OpenAIProvider(**kwargs)
+
+
+BUILTIN: Dict[str, Callable[..., VoiceProvider]] = {"edge": _edge, "miragea": _miragea,
+                                                    "openai": _openai, "dummy": _dummy}
+
+
+def edge_installed() -> bool:
+    return importlib.util.find_spec("edge_tts") is not None
+
+
+def default_provider_name() -> str:
+    """``VOICEOVER_PROVIDER`` if set, else ``miragea`` when ``MIRAGEA_API_KEY`` is set,
+    else the free ``edge`` engine."""
+    explicit = os.environ.get("VOICEOVER_PROVIDER", "").strip()
+    if explicit:
+        return explicit
+    if os.environ.get("MIRAGEA_API_KEY"):
+        return "miragea"
+    return "edge"
 
 
 def _entry_points() -> Dict[str, Any]:
@@ -43,8 +78,10 @@ def available_providers() -> list:
     return sorted(set(BUILTIN) | set(_entry_points()))
 
 
-def get_provider(name: str = "miragea", **kwargs: Any) -> VoiceProvider:
-    """Instantiate a provider by name."""
+def get_provider(name: str = "auto", **kwargs: Any) -> VoiceProvider:
+    """Instantiate a provider by name (``auto`` -> :func:`default_provider_name`)."""
+    if not name or name == "auto":
+        name = default_provider_name()
     if name in BUILTIN:
         return BUILTIN[name](**kwargs)
     eps = _entry_points()
@@ -54,4 +91,4 @@ def get_provider(name: str = "miragea", **kwargs: Any) -> VoiceProvider:
 
 
 __all__ = ["VoiceProvider", "Voice", "VoiceInfo", "SynthesisResult", "TranscriptSegment",
-           "get_provider", "available_providers"]
+           "get_provider", "available_providers", "default_provider_name", "edge_installed"]

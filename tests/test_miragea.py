@@ -170,3 +170,20 @@ def test_transcribe_rejects_large_file(client, fake, tmp_path):
     fake.add("GET", API + "/capabilities", (200, {"subtitles": {"points_per_second": 1, "max_upload_mb": 0.001}}))
     with pytest.raises(ConfigError):
         MirageaProvider(client).transcribe(str(media))
+
+
+def test_auto_voice_uses_account_actors(client, fake):
+    fake.add("GET", API + "/actors", (200, {"items": [{"actor_id": 7, "name": "A"}, {"actor_id": 9}],
+                                            "has_more": False}))
+    provider = MirageaProvider(client)
+    assert provider.auto_voice(0, "en").actor_id == "7"
+    assert provider.auto_voice(1, "en").actor_id == "9"
+    assert provider.auto_voice(2, "en").actor_id == "7"
+    assert len(fake.calls) == 1  # listed once
+
+
+def test_user_agent_is_browser_like(client, fake):
+    fake.add("GET", API + "/capabilities", (200, {}))
+    client.capabilities()
+    ua = fake.calls[0]["headers"]["User-Agent"]
+    assert ua.startswith("Mozilla/5.0") and "ai-voiceover-studio/" in ua

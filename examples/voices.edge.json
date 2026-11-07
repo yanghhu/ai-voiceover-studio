@@ -1,0 +1,7 @@
+{
+  "$comment": "Voices for the free edge engine. List more with: voiceover voices --provider edge --filter en-",
+  "NARRATOR": { "actor_id": "en-GB-RyanNeural" },
+  "ALEX":     { "actor_id": "en-US-AvaNeural", "speed": 1.05 },
+  "旁白":     { "actor_id": "zh-CN-YunjianNeural" },
+  "小林":     { "actor_id": "zh-CN-XiaoyiNeural" }
+}

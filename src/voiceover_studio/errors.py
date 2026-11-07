@@ -23,13 +23,13 @@ class ProviderError(VoiceoverError):
 
     _HINTS = {
         400: "Fix the request: check text length, model, tags, speed or voice fields.",
-        401: "The API key was rejected. Check MIRAGEA_API_KEY (the key is never logged).",
+        401: "The API key was rejected. Check MIRAGEA_API_KEY / OPENAI_API_KEY (keys are never logged).",
         403: "This key's account has no API access. Check API permissions in your workspace.",
         404: "Task or resource not found for this account.",
         409: "Idempotency key was reused with different input, or the subtitle rate changed. "
              "Re-check and submit again with a new key.",
         413: "Upload too large. Use a smaller or shorter media file.",
-        429: "Quota exhausted or rate limited. Wait, or top up credits, then retry.",
+        429: "Quota exhausted or rate limited. Wait a moment, check your account quota, then retry.",
         502: "Service temporarily unavailable. Retry later.",
         503: "Service temporarily unavailable. Retry later.",
     }

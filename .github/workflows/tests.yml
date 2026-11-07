@@ -14,7 +14,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: pip install -e ".[dev,video,yaml]"
+      - run: pip install -e ".[dev,edge,yaml]"
       - run: pytest
+      - name: Doctor
+        run: voiceover doctor
       - name: Dry run (offline dummy provider)
         run: voiceover script examples/script.md --dry-run -o out/ --name voiceover.wav
+      - name: Dry-run video (ffmpeg, captions, Ken Burns)
+        run: voiceover video --dry-run --images examples/slides --script examples/script.md -o out/video.mp4 --size 640x360 --fps 15

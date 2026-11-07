@@ -14,7 +14,7 @@ SCRIPT = "[NARRATOR]: Welcome to the channel.\n\n[ALEX](speed=1.2): Thanks for h
 
 
 def test_registry():
-    assert {"miragea", "dummy"} <= set(available_providers())
+    assert {"edge", "miragea", "openai", "dummy"} <= set(available_providers())
     with pytest.raises(ConfigError):
         get_provider("nope")
 
@@ -63,10 +63,14 @@ def test_recognize_falls_back_to_timing(tmp_path):
     assert result.subtitle_source == "timing"
 
 
+class NoAutoProvider(DummyProvider):
+    supports_auto_voices = False
+
+
 def test_missing_speaker_fails_before_synthesis(tmp_path):
     script = tmp_path / "s.md"
     script.write_text("[BOB]: hi", encoding="utf-8")
-    provider = DummyProvider()
+    provider = NoAutoProvider()
     voices = {"ALICE": Voice(actor_id="x")}
     with pytest.raises(ConfigError, match="BOB"):
         Studio(provider).render_script(script, tmp_path / "o", voices=voices)
@@ -92,21 +96,88 @@ def test_cli_dry_run(tmp_path, capsys):
     assert main(["voices", "--dry-run", "--json"]) == 0
 
 
-def test_cli_missing_key_is_clean_error(tmp_path, capsys, monkeypatch):
-    monkeypatch.delenv("MIRAGEA_API_KEY", raising=False)
-    code = main(["say", "hello", "--voice", "1", "-o", str(tmp_path / "x.wav")])
+def test_cli_missing_key_is_clean_error(tmp_path, capsys):
+    code = main(["say", "hello", "--provider", "miragea", "--voice", "1", "-o", str(tmp_path / "x.wav")])
     assert code == 2 and "MIRAGEA_API_KEY" in capsys.readouterr().err
 
 
+def test_auto_voices_per_speaker(tmp_path):
+    script = tmp_path / "s.md"
+    script.write_text(SCRIPT, encoding="utf-8")
+    provider = DummyProvider()
+    result = Studio(provider).render_script(script, tmp_path / "o", output_name="a.wav")
+    voices = {s.speaker: s.voice for s in result.segments}
+    assert voices == {"NARRATOR": "actor:dummy-narrator", "ALEX": "actor:dummy-host"}
+
+
+def test_explicit_voice_wins_over_auto(tmp_path):
+    script = tmp_path / "s.md"
+    script.write_text(SCRIPT, encoding="utf-8")
+    result = Studio(DummyProvider()).render_script(script, tmp_path / "o", output_name="a.wav",
+                                                   voices={"ALEX": Voice(actor_id="mine")})
+    assert {s.speaker: s.voice for s in result.segments}["ALEX"] == "actor:mine"
+
+
+def test_sentence_timings_drive_subtitles(tmp_path):
+    class Timed(DummyProvider):
+        def synthesize(self, text, voice, **kw):
+            res = super().synthesize(text, voice, **kw)
+            res.meta["sentences"] = [{"start": 0.1, "end": 0.6, "text": "First part."},
+                                     {"start": 0.9, "end": 1.4, "text": "Second part."}]
+            return res
+    script = tmp_path / "s.md"
+    script.write_text("First part. Second part.", encoding="utf-8")
+    result = Studio(Timed()).render_script(script, tmp_path / "o", output_name="a.wav")
+    srt = open(result.srt_path, encoding="utf-8").read()
+    assert "00:00:00,100 --> 00:00:00,900\nFirst part." in srt
+    assert "00:00:00,900 --> " in srt and "Second part." in srt
+    # timings survive a cached re-run
+    again = Studio(Timed()).render_script(script, tmp_path / "o", output_name="a.wav")
+    assert again.segments[0].meta.get("cached") and open(again.srt_path, encoding="utf-8").read() == srt
+
+
+def test_default_provider_resolution(monkeypatch):
+    from voiceover_studio.providers import default_provider_name
+    assert default_provider_name() == "edge"
+    monkeypatch.setenv("MIRAGEA_API_KEY", "k")
+    assert default_provider_name() == "miragea"
+    monkeypatch.setenv("VOICEOVER_PROVIDER", "dummy")
+    assert default_provider_name() == "dummy"
+
+
+def _ffmpeg_with(*filters):
+    import shutil, subprocess
+    exe = shutil.which("ffmpeg")
+    if not exe:
+        return False
+    listing = subprocess.run([exe, "-hide_banner", "-filters"], stdout=subprocess.PIPE).stdout.decode()
+    return all(" %s " % f in listing for f in filters)
+
+
+@pytest.mark.skipif(not _ffmpeg_with("ass", "xfade"), reason="needs ffmpeg with libass")
 def test_video(tmp_path):
-    pytest.importorskip("moviepy")
-    from PIL import Image
+    import subprocess
     from voiceover_studio.video import render_video
     imgs = tmp_path / "imgs"
     imgs.mkdir()
-    for i in range(2):
-        Image.new("RGB", (320, 240), (i * 100, 50, 50)).save(imgs / ("%d.png" % i))
+    for i in range(2):  # tiny solid-colour images made by ffmpeg itself
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x%02x5050:s=320x240" % (i * 90),
+                        "-frames:v", "1", str(imgs / ("%d.png" % i))], check=True)
     script = tmp_path / "s.md"
-    script.write_text("[A]: First slide.\n\n[A]: Second slide.", encoding="utf-8")
-    out = render_video(Studio("dummy"), imgs, script, tmp_path / "v.mp4", size=(320, 240), fps=5)
+    script.write_text("# Title\n\n[A]: First slide.\n\n[B]: Second slide.", encoding="utf-8")
+    out = render_video(Studio("dummy"), imgs, script, tmp_path / "v.mp4", size=(320, 240), fps=10,
+                       speaker_labels=True, title=True)
     assert (tmp_path / "v.mp4").stat().st_size > 0 and out["subtitles"].endswith(".srt")
+    probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                            str(tmp_path / "v.mp4")], stdout=subprocess.PIPE).stdout.decode()
+    assert abs(float(probe) - out["duration"]) < 0.5
+
+
+@pytest.mark.skipif(not _ffmpeg_with("ass", "xfade", "gradients"), reason="needs ffmpeg with libass")
+def test_video_without_images(tmp_path):
+    from voiceover_studio.video import render_video
+    script = tmp_path / "s.md"
+    script.write_text("# Hello\n\nJust a script, no pictures.", encoding="utf-8")
+    out = render_video(Studio("dummy"), None, script, tmp_path / "v.mp4", size=(320, 180), fps=10,
+                       motion="none", transition=0)
+    assert out["images"] == 1 and (tmp_path / "v.mp4").stat().st_size > 0

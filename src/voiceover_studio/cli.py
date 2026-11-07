@@ -1,10 +1,13 @@
 """`voiceover` command line.
 
-    voiceover say "Hello world" --voice ACTOR_ID -o hello.mp3
-    voiceover script script.md --voices voices.json -o out/
-    voiceover voices
+    voiceover say "Hello world" -o hello.mp3
+    voiceover script script.md -o out/
     voiceover video --images slides/ --script script.md -o video.mp4
-    voiceover task TASK_ID --wait -o result.mp3
+    voiceover voices --provider edge --filter en-GB
+    voiceover doctor
+    voiceover task TASK_ID --wait -o result.mp3        (miragea)
+
+Engines: edge (free, default without MIRAGEA_API_KEY), miragea, openai, dummy.
 
 Exit codes: 0 success, 1 a provider task failed, 2 usage/config/API error.
 """
@@ -18,7 +21,7 @@ from typing import List, Optional
 
 from . import __version__
 from .errors import VoiceoverError
-from .providers import available_providers
+from .providers import available_providers, default_provider_name
 from .studio import Studio
 
 
@@ -32,11 +35,13 @@ def _size(value: str):
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="voiceover", description="AI voiceover, subtitles and faceless "
-                                "videos from a script. Default engine: Miragea (MIRAGEA_API_KEY).")
+                                "videos from a script. Default engine: free Edge neural voices, or "
+                                "Miragea when MIRAGEA_API_KEY is set.")
     p.add_argument("--version", action="version", version="%(prog)s " + __version__)
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--provider", default=os.environ.get("VOICEOVER_PROVIDER", "miragea"),
-                        help="voice engine (%s); env VOICEOVER_PROVIDER" % ", ".join(available_providers()))
+    common.add_argument("--provider", default="auto",
+                        help="voice engine: auto, %s (auto = env VOICEOVER_PROVIDER, else miragea when "
+                        "MIRAGEA_API_KEY is set, else edge)" % ", ".join(available_providers()))
     common.add_argument("--dry-run", action="store_true",
                         help="use the offline dummy provider (silence); no API key, no network")
     common.add_argument("--json", action="store_true", help="machine-readable output")
@@ -56,8 +61,9 @@ def build_parser() -> argparse.ArgumentParser:
     say = sub.add_parser("say", parents=[common, voice_opts], help="voice one piece of text")
     say.add_argument("text", nargs="?", help="text to speak (or --text-file)")
     say.add_argument("--text-file", type=Path)
-    say.add_argument("--voice", required=False, help="actor id from `voiceover voices`, or an http(s) "
-                     "URL of reference audio to clone")
+    say.add_argument("--voice", required=False, help="voice id from `voiceover voices` (e.g. "
+                     "en-US-AvaNeural for edge), or an http(s) URL of reference audio to clone (miragea); "
+                     "default: picked from the text's language")
     say.add_argument("--ref-text", dest="reference_text", help="exact transcript of the reference audio")
     say.add_argument("-o", "--output", default="voiceover.mp3")
 
@@ -74,17 +80,36 @@ def build_parser() -> argparse.ArgumentParser:
     voices.add_argument("--limit", type=int, default=50)
     voices.add_argument("--offset", type=int, default=0)
     voices.add_argument("--all", action="store_true", help="follow pagination")
+    voices.add_argument("--filter", help="only voices whose id, name or language contains this text")
 
-    video = sub.add_parser("video", parents=[common, voice_opts], help="faceless slideshow video (needs moviepy)")
-    video.add_argument("--images", type=Path, required=True, help="folder of images, used in name order")
+    video = sub.add_parser("video", parents=[common, voice_opts], help="faceless video with motion and "
+                           "styled captions (needs ffmpeg)")
+    video.add_argument("--images", type=Path, help="folder of images, used in name order (default: "
+                       "animated gradient background)")
     video.add_argument("--script", type=Path, required=True)
     video.add_argument("-o", "--output", type=Path, default=Path("video.mp4"))
     _script_args(video)
     video.add_argument("--size", type=_size, default=(1920, 1080), help="e.g. 1920x1080 or 1080x1920 (Shorts)")
     video.add_argument("--fps", type=int, default=30)
     video.add_argument("--fit", choices=("cover", "contain"), default="cover")
-    video.add_argument("--subtitles", choices=("sidecar", "burn", "none"), default="sidecar")
+    video.add_argument("--subtitles", choices=("burn", "sidecar", "none"), default="burn",
+                       help="burn styled captions into the video (default; an .srt is written too), "
+                       "sidecar .srt only, or none")
     video.add_argument("--subtitle-source", choices=("timing", "recognize"), default="timing")
+    video.add_argument("--style", choices=("clean", "box", "bold", "minimal"), default="clean",
+                       help="caption style (bold suits vertical Shorts)")
+    video.add_argument("--motion", choices=("kenburns", "none"), default="kenburns")
+    video.add_argument("--transition", type=float, default=0.5, help="cross-fade seconds (0 = cut)")
+    video.add_argument("--title", help="title card text (default: the script's first # heading, shown when no --images are given)")
+    video.add_argument("--no-title", action="store_true")
+    video.add_argument("--speaker-labels", action="store_true", help="show the speaker name above captions")
+    video.add_argument("--no-progress-bar", action="store_true")
+    video.add_argument("--font", help="caption font family or .ttf/.otf path (CJK: e.g. 'Noto Sans SC')")
+
+    doctor = sub.add_parser("doctor", help="check ffmpeg, engines and API keys")
+    doctor.add_argument("--online", action="store_true", help="also synthesize one short test line "
+                        "with the free edge engine (no account needed)")
+    doctor.add_argument("--json", action="store_true")
 
     task = sub.add_parser("task", parents=[common], help="check or resume a Miragea task")
     task.add_argument("task_id")
@@ -101,7 +126,9 @@ def _script_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _provider_name(args: argparse.Namespace) -> str:
-    return "dummy" if args.dry_run else args.provider
+    if args.dry_run:
+        return "dummy"
+    return default_provider_name() if args.provider in (None, "", "auto") else args.provider
 
 
 def _studio(args: argparse.Namespace) -> Studio:
@@ -134,11 +161,7 @@ def cmd_say(args: argparse.Namespace) -> int:
     if not text or not text.strip():
         raise VoiceoverError("Give the text to speak, or --text-file")
     studio = _studio(args)
-    voice = args.voice or ("dummy-narrator" if studio.provider.name == "dummy" else None)
-    if not voice:
-        raise VoiceoverError("--voice is required: an actor id (see `voiceover voices`) or a "
-                             "reference audio URL")
-    result = studio.say(text.strip(), voice, args.output, reference_text=args.reference_text,
+    result = studio.say(text.strip(), args.voice or None, args.output, reference_text=args.reference_text,
                         **_voice_overrides(args))
     _emit(args, result, "Saved %s" % result["output"])
     return 0
@@ -175,8 +198,12 @@ def cmd_voices(args: argparse.Namespace) -> int:
         items, more = studio.provider.list_voices(min(max(args.limit, 1), 100), offset)
         found.extend(items)
         offset += len(items)
-        if not (args.all and more and items):
+        if not ((args.all or args.filter) and more and items):
             break
+    if args.filter:
+        needle = args.filter.lower()
+        found = [v for v in found if needle in ("%s %s %s" % (v.voice_id, v.name, v.language)).lower()]
+        more = False
     if args.json:
         print(json.dumps({"items": [v.__dict__ for v in found], "has_more": more}, ensure_ascii=False, indent=2))
     else:
@@ -197,12 +224,23 @@ def cmd_video(args: argparse.Namespace) -> int:
     if args.default_voice:
         from .providers.base import Voice
         default = Voice.parse(args.default_voice).merged(overrides)
+    def progress(n, total, seg):
+        if not args.json:
+            print("[%d/%d] %s: %s" % (n, total, seg.speaker, seg.text[:60] + ("..." if len(seg.text) > 60 else "")),
+                  file=sys.stderr)
+
+    title = False if args.no_title else (args.title or "auto")
     result = render_video(studio, args.images, args.script, args.output, voices=voices,
                           default_voice=default, size=args.size, fps=args.fps, subtitles=args.subtitles,
-                          fit=args.fit, subtitle_source=args.subtitle_source, gap=args.gap,
-                          max_chars=args.max_chars, use_cache=not args.fresh)
-    _emit(args, result, "Video:     %s (%.1fs, %d images)\nSubtitles: %s" % (
-        result["video"], result["duration"], result["images"], result["subtitles"] or "-"))
+                          fit=args.fit, subtitle_source=args.subtitle_source, style=args.style,
+                          motion=args.motion, transition=args.transition, title=title,
+                          speaker_labels=args.speaker_labels, progress_bar=not args.no_progress_bar,
+                          font=args.font, gap=args.gap, max_chars=args.max_chars,
+                          use_cache=not args.fresh, progress=progress)
+    result["provider"] = studio.provider.name
+    _emit(args, result, "Video:     %s (%.1fs, %d images, %s captions)\nAudio:     %s\nSubtitles: %s" % (
+        result["video"], result["duration"], result["images"], result["style"], result["audio"],
+        result["subtitles"] or "-"))
     return 0
 
 
@@ -226,12 +264,24 @@ def cmd_task(args: argparse.Namespace) -> int:
     return 1 if task.get("status") == "failed" else 0
 
 
-COMMANDS = {"say": cmd_say, "script": cmd_script, "voices": cmd_voices, "video": cmd_video, "task": cmd_task}
+def cmd_doctor(args: argparse.Namespace) -> int:
+    from .doctor import run_checks, format_report
+    checks = run_checks(online=args.online)
+    if args.json:
+        print(json.dumps({"checks": checks, "ok": all(c["status"] != "fail" for c in checks)},
+                         ensure_ascii=False, indent=2))
+    else:
+        print(format_report(checks))
+    return 0 if all(c["status"] != "fail" for c in checks) else 2
+
+
+COMMANDS = {"say": cmd_say, "script": cmd_script, "voices": cmd_voices, "video": cmd_video, "task": cmd_task,
+            "doctor": cmd_doctor}
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING,
+    logging.basicConfig(level=logging.DEBUG if getattr(args, "verbose", False) else logging.WARNING,
                         format="%(levelname)s %(message)s")
     try:
         return COMMANDS[args.command](args)

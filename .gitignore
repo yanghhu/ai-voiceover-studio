@@ -26,3 +26,8 @@ voices.json
 voices.yaml
 !examples/voices.example.json
 !examples/voices.example.yaml
+
+# demo media shipped with the docs
+!docs/assets/*.mp4
+!docs/assets/*.mp3
+!docs/assets/*.srt

@@ -4,53 +4,61 @@
 
 # AI Voiceover Studio — locución con IA, texto a voz y clonación de voz para YouTube y vídeos sin rostro
 
-**AI Voiceover Studio es una herramienta de línea de comandos y librería de Python de código abierto que convierte un guion escrito en una locución con IA terminada —narración con varios personajes, clonación de voz, subtítulos SRT y un vídeo sencillo sin rostro (faceless)— con un solo comando.**
+**AI Voiceover Studio es una herramienta de línea de comandos y librería de Python de código abierto que convierte un guion en Markdown en una locución con IA, subtítulos SRT y un vídeo sin rostro (faceless) con subtítulos, con un solo comando. Funciona al instante con voces neuronales gratuitas (sin cuenta ni clave de API) y se conecta a Miragea para clonación de voz y voces expresivas.**
 
 [![Tests](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+<img src="docs/assets/demo.gif" alt="Comando en la terminal y el vídeo sin rostro generado: zoom Ken Burns, dos voces con IA y subtítulos incrustados" width="720">
+
+<sub>Salida real, sin editar: [vídeo completo con sonido (MP4, 40 s)](docs/assets/demo.mp4) · [solo la locución (MP3)](docs/assets/sample-voiceover.mp3) · [subtítulos (SRT)](docs/assets/sample-voiceover.srt) · [Short vertical en chino (MP4)](docs/assets/demo-short-zh.mp4)</sub>
+
 </div>
 
+## Inicio rápido (tres líneas)
+
 ```bash
-voiceover script guion.md --voices voices.json -o out/
-# -> out/voiceover.mp3  out/voiceover.srt  out/manifest.json
+git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio
+pip install -e ".[edge]"
+voiceover video --images examples/slides --script examples/script.md -o out/video.mp4
 ```
 
-## Demo
+Eso es todo. Obtienes `out/video.mp4` (1080p, dos voces, movimiento Ken Burns, subtítulos incrustados), `out/video.srt` y la pista de locución en `out/video_voiceover/`. Necesita Python 3.9+ y [ffmpeg](https://ffmpeg.org); `voiceover doctor` comprueba ambos.
 
-<!-- Marcador de posición: sustituir por docs/assets/demo.gif -->
+```bash
+voiceover script examples/script.md -o out/      # solo audio: out/voiceover.mp3 + .srt + manifest.json
+voiceover say "¡Bienvenidos de nuevo al canal!" -o hola.mp3
+voiceover doctor                                 # ffmpeg, motores, claves y fuentes
+```
 
-> 🎬 *El GIF de demostración llegará pronto.* Mientras tanto, la ejecución sin conexión (`--dry-run`) recorre todo el proceso (tiempos, subtítulos, vídeo) con audio en silencio y sin clave de API.
+No hace falta archivo de voces: cada personaje del guion recibe automáticamente una voz distinta según el idioma del guion.
 
-## Funciones: locución con IA, texto a voz y subtítulos
+## Funciones
 
 | | Qué obtienes |
 | --- | --- |
-| 🗣️ **Texto a voz (TTS)** | `voiceover say "..."`: una frase a MP3/WAV, con velocidad y etiquetas de estilo/emoción |
-| 🎭 **Guiones con varios personajes** | líneas `[NARRADOR]:` / `[ALEX]:` en Markdown o TXT, cada personaje con su propia voz |
-| 🧬 **Clonación de voz** | usa la URL de un audio de referencia (y su transcripción) como voz |
-| 💬 **Subtítulos** | SRT a partir de la duración exacta de cada segmento, o por reconocimiento de voz |
-| 🎞️ **Vídeo sin rostro** | imágenes + guion → MP4 tipo presentación con locución y subtítulos |
-| ♻️ **Repetir de forma segura** | caché por línea y claves de idempotencia deterministas: lo que no cambia no se regenera |
-| 🔌 **Motores intercambiables** | interfaz `VoiceProvider`; el motor remoto incluido es [Miragea](https://miragea.ai), y `dummy` funciona sin conexión |
-| 🪶 **Ligero** | solo la biblioteca estándar de Python 3.9+; `moviepy` y `PyYAML` son opcionales; usa `ffmpeg` si está instalado |
+| 🆓 **Sin registro** | el motor por defecto son las voces neuronales gratuitas de Microsoft Edge (`edge-tts`): 322 voces y 75 idiomas, sin cuenta ni clave |
+| 🎭 **Varios personajes** | líneas `[NARRADOR]:` / `[ALEX]:`; cada personaje recibe su propia voz automáticamente, o asígnalas en `voices.json` |
+| 🎞️ **Vídeo sin rostro** | imágenes (o solo el guion) → MP4 con zoom Ken Burns, fundidos, barra de progreso y subtítulos con estilo |
+| 💬 **Subtítulos precisos** | SRT a partir de los límites de frase del motor, o por reconocimiento de voz; ajuste de líneas compatible con CJK |
+| 🎨 **Estilos de subtítulos** | `clean`, `box`, `bold` (Shorts/Reels) y `minimal`; etiquetas de personaje; se adaptan a 16:9 y 9:16 |
+| 🧬 **Clonación de voz** | con el motor Miragea: la URL de un audio de referencia (y su transcripción) como voz |
+| ♻️ **Repetir de forma segura** | caché por línea y claves de idempotencia deterministas |
+| 🔌 **Motores intercambiables** | `edge`, `miragea`, `openai`, `dummy` sin conexión, o el tuyo con la interfaz `VoiceProvider` |
+| 🩺 **`voiceover doctor`** | revisa ffmpeg (libass), motores, claves de API y fuentes CJK, y te dice cómo arreglar cada cosa |
+| 🪶 **Núcleo ligero** | solo la biblioteca estándar; los motores son extras opcionales; el vídeo lo renderiza ffmpeg directamente |
 
-## Inicio rápido
+## Motores de voz
 
-```bash
-git clone https://github.com/yanghhu/ai-voiceover-studio.git
-cd ai-voiceover-studio
-pip install -e .
+| Motor | Configuración | Ideal para |
+| --- | --- | --- |
+| `edge` (por defecto sin clave) | `pip install -e ".[edge]"`, sin cuenta ni clave | probar, borradores, muchos idiomas |
+| `miragea` (por defecto con `MIRAGEA_API_KEY`) | `export MIRAGEA_API_KEY=...` ([crear clave](https://miragea.ai/workspace/api)) | clonación de voz, modelos expresivos con etiquetas de emoción, reconocimiento de subtítulos |
+| `openai` | `export OPENAI_API_KEY=...` | voces de OpenAI (`alloy`, `nova`, `onyx`...) |
+| `dummy` | nada (`--dry-run`) | pruebas sin conexión y CI |
 
-voiceover script examples/script.md --dry-run -o out/      # sin conexión ni clave
-
-export MIRAGEA_API_KEY=...      # créala en https://miragea.ai/workspace/api
-voiceover voices                # voces de tu cuenta (actor id)
-voiceover say "¡Bienvenidos de nuevo al canal!" --voice <actor_id> -o hola.mp3
-```
-
-La clave solo se lee del entorno y solo se envía en la cabecera `Authorization` al servidor de la API; nunca se imprime ni se guarda. La salida MP3 requiere [ffmpeg](https://ffmpeg.org) (sin él, usa `.wav`).
+Elige con `--provider NOMBRE` o `VOICEOVER_PROVIDER`. `voiceover voices --provider edge --filter es-` lista las voces de Edge (p. ej. `es-ES-ElviraNeural`). Las claves solo se leen del entorno y nunca se imprimen ni se guardan. Las voces de Edge provienen del servicio de lectura en línea de Microsoft (mediante el paquete comunitario `edge-tts`) y requieren conexión a internet.
 
 ## Guiones con varios personajes (diálogo y doblaje)
 
@@ -61,9 +69,11 @@ La clave solo se lee del entorno y solo se envía en la cabecera `Authorization`
 [NARRADOR](speed=1.05): La luz azul, de onda corta, se dispersa mucho más en la atmósfera.
 ```
 
-`[NOMBRE]:` define quién habla, las líneas sin etiqueta continúan con el mismo personaje, una línea en blanco empieza un segmento nuevo y `[pause 1.5]` inserta silencio. Asigna voces en `voices.json` ([ejemplo](examples/voices.example.json)).
+`[NOMBRE]:` define quién habla, las líneas sin etiqueta continúan con el mismo personaje, una línea en blanco empieza un segmento nuevo y `[pause 1.5]` inserta silencio. Sin archivo de voces, cada personaje recibe una voz distinta automáticamente; para elegirlas tú, usa `voices.json` ([ejemplo](examples/voices.example.json)).
 
 ## Clonación de voz con un audio de referencia
+
+La clonación de voz usa el motor Miragea (`MIRAGEA_API_KEY`).
 
 ```bash
 voiceover say "Esta es mi propia voz, generada a partir de texto." \
@@ -80,14 +90,17 @@ Clona solo tu propia voz o voces para las que tengas permiso explícito.
 ## Vídeo de YouTube sin rostro a partir de imágenes y un guion
 
 ```bash
-pip install -e ".[video]"
-voiceover video --images examples/slides/ --script examples/script.md -o video.mp4 --subtitles burn
-voiceover video ... --size 1080x1920 -o short.mp4     # vertical para Shorts / Reels / TikTok
+voiceover video --images examples/slides --script examples/script.md -o video.mp4
+voiceover video --script guion.md -o short.mp4 --size 1080x1920 --style bold   # vertical, sin imágenes
+voiceover video --images slides/ --script guion.md -o video.mp4 --style box --speaker-labels
 ```
+
+Opciones principales: `--subtitles burn|sidecar|none` (por defecto `burn`, también escribe `.srt`), `--style clean|box|bold|minimal`, `--motion kenburns|none`, `--transition SEG` (0,5 por defecto), `--size 1080x1920`, `--title` / `--no-title`, `--speaker-labels`, `--font`. Si el número de imágenes coincide con el de segmentos, cada imagen se muestra exactamente mientras se oye su segmento. El vídeo se genera con una sola llamada a ffmpeg, sin librerías de vídeo de Python.
 
 ## Idiomas compatibles
 
-Con el motor Miragea incluido: **chino, inglés, japonés, coreano, alemán, francés, ruso, portugués, español e italiano**.
+- **edge**: 75 idiomas (`voiceover voices --provider edge`); voz automática para español, inglés, chino, japonés, coreano, francés, alemán, italiano, portugués y ruso según el texto o `--lang`.
+- **miragea**: chino, inglés, japonés, coreano, alemán, francés, ruso, portugués, español e italiano, con clonación de voz.
 
 ## Preguntas frecuentes
 
@@ -97,7 +110,7 @@ Más respuestas en [docs/FAQ.md](docs/FAQ.md) (en inglés).
 
 **¿Puedo clonar mi propia voz?** Sí: publica una grabación en una URL accesible para la API y usa `--voice` con `--ref-text`.
 
-**¿Puedo probarlo sin clave de API?** Sí, `--dry-run` funciona totalmente sin conexión.
+**¿Necesito una clave de API?** No. El motor `edge` por defecto es gratuito y sin cuenta, y `--dry-run` funciona sin conexión. Una clave de Miragea añade clonación de voz y voces expresivas.
 
 ## Arquitectura, comparación y hoja de ruta
 

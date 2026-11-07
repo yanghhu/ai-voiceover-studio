@@ -5,9 +5,7 @@
 
 ## Suggested description (≤ 350 characters)
 
-Open-source AI voiceover CLI & Python library: text to speech, voice cloning and multi-speaker scripts to MP3 + SRT subtitles, plus faceless YouTube slideshow videos. Re-run safe (cache + idempotency), agent-ready (Claude Code, Codex, Cursor), pluggable TTS engines. 10 languages.
-
-(280 characters)
+Script → AI voiceover, SRT subtitles and captioned faceless videos in one command. Free neural voices out of the box (no key), multi-speaker scripts, Ken Burns slides, caption styles for Shorts, voice cloning via Miragea, OpenAI engine, agent-ready CLI + Python library.
 
 ## Website field
 https://github.com/yanghhu/ai-voiceover-studio#readme

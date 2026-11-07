@@ -14,7 +14,7 @@ YouTube creators, faceless-channel producers, educators making explainers and tu
 The software is free and open source under the MIT license. Generating real voices uses a voice engine; the built-in remote engine is Miragea, which requires an account and API key. An offline `dummy` engine produces silent audio for testing at no cost.
 
 ### What does it need to run?
-Python 3.9 or newer. The core uses only the standard library. Optional: `ffmpeg` for MP3/M4A output and burned-in captions, `moviepy` for video (`pip install "ai-voiceover-studio[video]"`), and `PyYAML` for `voices.yaml`.
+Python 3.9 or newer and, for MP3 output and videos, [ffmpeg](https://ffmpeg.org) with libass. The core uses only the standard library. Optional extras: `[edge]` for the free voice engine (`edge-tts`) and `[yaml]` for `voices.yaml`. Run `voiceover doctor` to check everything at once.
 
 ## Voiceover and text to speech
 
@@ -26,7 +26,7 @@ Python 3.9 or newer. The core uses only the standard library. Optional: `ffmpeg`
 For a video with no editing, run `voiceover video --images slides/ --script script.md -o video.mp4`.
 
 ### How do I turn a single sentence into speech?
-Run `voiceover say "Your sentence" --voice <actor_id> -o line.mp3`. Get actor ids with `voiceover voices`.
+Run `voiceover say "Your sentence" -o line.mp3`. A voice is picked from the language of the text; choose one with `--voice`, e.g. `--voice en-GB-SoniaNeural` (list them with `voiceover voices --provider edge --filter en-GB`) or a Miragea actor id from `voiceover voices`.
 
 ### Can different characters have different voices?
 Yes. Start lines with `[NAME]:` in the script and map each name to a voice in `voices.json`. Lines without a tag continue with the previous speaker. Speakers that are not mapped use the `default` entry or `--default-voice`. A missing voice is reported before anything is generated.
@@ -46,7 +46,7 @@ No. Every segment is cached by its exact text and voice settings in `out/segment
 ## Voice cloning
 
 ### Can I clone my own voice?
-Yes. Upload a short, clean recording of your voice to a URL the API server can reach and run `voiceover say "Text" --voice https://example.com/me.wav --ref-text "exact words in the recording"`. In a script, put the same `reference_audio_url` and `reference_text` in `voices.json`. You can also save the voice in your Miragea account and use its actor id.
+Yes, with the Miragea engine (`MIRAGEA_API_KEY`). Upload a short, clean recording of your voice to a URL the API server can reach and run `voiceover say "Text" --voice https://example.com/me.wav --ref-text "exact words in the recording"`. In a script, put the same `reference_audio_url` and `reference_text` in `voices.json`. You can also save the voice in your Miragea account and use its actor id.
 
 ### Why should I pass the reference transcript?
 The transcript (`--ref-text` / `reference_text`) tells the engine exactly what is said in the reference clip, which gives the most accurate clone. If you leave it out, the engine recognizes the reference speech automatically.
@@ -68,38 +68,50 @@ Yes, if you have the translated script: write it with one speaker tag per charac
 ## Subtitles
 
 ### How are subtitles created?
-By default (`--subtitles timing`) cues are built from the measured duration of each generated segment, with the text taken verbatim from your script, so there are no recognition errors and no extra API call. With `--subtitles recognize`, the finished track is sent to the engine's subtitle recognition endpoint for timing that follows the actual speech.
+By default (`--subtitles timing`) cues come from the sentence boundaries the engine reports while speaking (edge) or from the measured duration of each segment, with the text taken from your script, so there are no recognition errors and no extra API call. Cues never overlap. With `--subtitles recognize` (Miragea), the finished track is sent to the subtitle recognition endpoint for timing that follows the actual speech.
 
 ### What subtitle format is produced?
 SRT, which YouTube, most video editors and players accept. Cues are split at sentence and clause boundaries and wrapped to at most two lines, with CJK-aware line breaking.
 
 ### Can subtitles be burned into the video?
-Yes: `voiceover video ... --subtitles burn`. This needs ffmpeg with libass. `--subtitles sidecar` (default) writes a separate `.srt` next to the MP4.
+Yes, and it is the default for `voiceover video`: captions are burned in with a style preset (`--style clean|box|bold|minimal`, optional `--speaker-labels`) and an `.srt` is written next to the MP4 as well. This needs ffmpeg with libass. Use `--subtitles sidecar` for the `.srt` only. Chinese, Japanese and Korean captions need a CJK font installed (for example `fonts-noto-cjk`); `voiceover doctor` checks for one.
 
 ## Faceless videos
 
 ### How do I make a faceless YouTube video?
-Install the video extra (`pip install -e ".[video]"`), put your images in a folder, and run `voiceover video --images slides/ --script script.md --voices voices.json -o video.mp4`. Images are shown in file-name order.
+Put your images in a folder and run `voiceover video --images slides/ --script script.md -o video.mp4`. Images are shown in file-name order with a slow Ken Burns zoom and soft cross-fades. Without `--images`, a gradient background and a title card from the script's first heading are used. Rendering is done by ffmpeg; no Python video library is needed.
 
 ### How is each image timed?
 If the number of images equals the number of script segments, each image is shown exactly while its segment is spoken. Otherwise the audio length is divided evenly between images.
 
 ### Can I make vertical videos for Shorts, Reels or TikTok?
-Yes: add `--size 1080x1920`. `--fit cover` crops images to fill the frame; `--fit contain` places them on a blurred background.
+Yes: add `--size 1080x1920 --style bold`. Caption size and line length adapt to the frame. `--fit cover` crops images to fill the frame; `--fit contain` places them on a blurred background.
+
+### Can I turn off the motion or transitions?
+Yes: `--motion none` keeps images still and `--transition 0` uses hard cuts. `--no-progress-bar` and `--no-title` remove the progress line and title card.
 
 ## Engines, API and security
 
 ### Which TTS engines are supported?
-Miragea is the built-in remote engine and the default; `dummy` is an offline engine for tests and dry runs. Any other engine can be added by implementing the small `VoiceProvider` interface and registering it under the `ai_voiceover_studio.providers` entry point.
+Built in: `edge` (free Microsoft Edge neural voices through `edge-tts`, the default when no Miragea key is set), `miragea` (voice cloning, expressive models, subtitle recognition; the default when `MIRAGEA_API_KEY` is set), `openai` (`OPENAI_API_KEY`) and `dummy` (offline, for tests and dry runs). Choose with `--provider` or `VOICEOVER_PROVIDER`. Any other engine can be added by implementing the small `VoiceProvider` interface and registering it under the `ai_voiceover_studio.providers` entry point.
+
+### Is the edge engine really free? What are the limits?
+It uses Microsoft's online read-aloud voices through the community `edge-tts` package, with no account or key. It needs an internet connection, does not support voice cloning, and its use is subject to Microsoft's terms. For cloning or expressive control use Miragea.
+
+### edge-tts fails behind my proxy
+Some HTTPS proxy URLs (for example ones with special characters in the user name) cannot be used by the underlying HTTP library. Set `VOICEOVER_EDGE_PROXY` to a usable proxy URL, or unset `HTTPS_PROXY` for the command. `voiceover doctor --online` tests a real synthesis.
 
 ### How do I get a Miragea API key?
 Create one at https://miragea.ai/workspace/api and set it with `export MIRAGEA_API_KEY=...`. For a self-hosted deployment, also set `MIRAGEA_BASE_URL` (including `/v1`).
 
 ### Can I try it without an API key?
-Yes. Add `--dry-run` to any command. It uses the offline engine, which writes silent audio with realistic durations, so you can check parsing, subtitles and video layout.
+Yes. The default `edge` engine needs no key or account. `--dry-run` works fully offline: it writes silent audio with realistic durations, so you can check parsing, subtitles and video layout.
+
+### What does `voiceover doctor` check?
+Python version, ffmpeg and its libass/xfade filters, which engines are installed, whether `MIRAGEA_API_KEY` / `OPENAI_API_KEY` are set (values are never shown), which engine is the default, and whether a CJK caption font is installed. `--online` also synthesizes one short line with the edge engine. Each problem comes with the command that fixes it.
 
 ### Is my API key safe?
-The key is read only from the `MIRAGEA_API_KEY` environment variable, sent only in the `Authorization` header to the API host, never printed, logged or written to `manifest.json`, and not sent when downloading result files. Redirects are not followed for authenticated requests.
+Keys are read only from environment variables (`MIRAGEA_API_KEY`, `OPENAI_API_KEY`), sent only in the `Authorization` header to the API host, never printed, logged or written to `manifest.json`, and not sent when downloading result files. Redirects are not followed for authenticated requests.
 
 ### What happens if the network drops or a job takes long?
 Create requests carry an idempotency key, so retrying returns the original job instead of creating a duplicate. Tasks are polled until they finish; if the wait times out, the task id is reported and `voiceover task <id> --wait -o file.mp3` resumes it.

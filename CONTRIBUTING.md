@@ -8,13 +8,16 @@ Thanks for helping! Bug reports, docs fixes, new voice providers and features ar
 git clone https://github.com/yanghhu/ai-voiceover-studio.git
 cd ai-voiceover-studio
 python -m venv .venv && . .venv/bin/activate
-pip install -e ".[dev,video,yaml]"
+pip install -e ".[dev,edge,yaml]"
 pytest
-voiceover script examples/script.md --dry-run -o out/
+voiceover doctor
+voiceover script examples/script.md --dry-run -o out/      # offline
+voiceover script examples/script.md -o out/                # real voices (edge, free)
 ```
 
 The test-suite runs fully offline. Never call a paid endpoint from tests: use the
-`FakeTransport` in `tests/conftest.py` or the `dummy` provider.
+`FakeTransport` in `tests/conftest.py`, the fake `Communicate` in `tests/test_edge.py`, or
+the `dummy` provider.
 
 ## Guidelines
 
@@ -22,7 +25,8 @@ The test-suite runs fully offline. Never call a paid endpoint from tests: use th
   library alone. Heavy dependencies belong behind an optional extra.
 - **Tests for every change.** Anything that talks to a network gets mocked HTTP tests.
 - **Secrets stay secret.** Never print, log or persist API keys; never commit keys,
-  `voices.json` with private URLs, or generated media.
+  `voices.json` with private URLs, or generated media (curated demo files in `docs/assets/`
+  are the exception).
 - **Small, focused PRs** with a line in `CHANGELOG.md` under *Unreleased*.
 - Style: readable code over clever code; type hints on public functions.
 

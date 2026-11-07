@@ -13,6 +13,7 @@ class Cue:
     start: float
     end: float
     text: str
+    speaker: str = ""
 
 
 def format_timestamp(seconds: float) -> str:
@@ -145,3 +146,35 @@ def cues_from_timing(items: Iterable[tuple], max_chars: int = 84, line_width: in
 
 def cues_from_transcript(segments: Iterable[TranscriptSegment], line_width: int = 42) -> List[Cue]:
     return [Cue(s.start, s.end, wrap(s.text, line_width)) for s in segments if s.text]
+
+
+def cues_from_segments(results: Iterable, max_chars: int = 84, line_width: int = 42) -> List[Cue]:
+    """Cues for rendered segments (objects with ``start``, ``end``, ``text`` and ``meta``).
+
+    When the engine reported sentence timings (``meta["sentences"]``, seconds relative
+    to the clip) they are used directly, so captions follow the actual speech;
+    otherwise the segment's time is shared by character weight."""
+    cues: List[Cue] = []
+    for res in results:
+        sentences = [s for s in (getattr(res, "meta", None) or {}).get("sentences") or []
+                     if str(s.get("text", "")).strip() and float(s.get("end", 0)) > float(s.get("start", 0))]
+        if not sentences:
+            for cue in cues_from_timing([(res.start, res.end, res.text)], max_chars, line_width):
+                cue.speaker = getattr(res, "speaker", "")
+                cues.append(cue)
+            continue
+        for i, sent in enumerate(sentences):
+            start = res.start + float(sent["start"])
+            if i + 1 < len(sentences):  # hold the caption until the next sentence starts
+                end = res.start + float(sentences[i + 1]["start"])
+            else:
+                end = min(res.end, res.start + float(sent["end"]) + 0.4)
+            if end - start < 0.2:
+                end = start + 0.2
+            for cue in cues_from_timing([(start, end, str(sent["text"]).strip())], max_chars, line_width):
+                cue.speaker = getattr(res, "speaker", "")
+                cues.append(cue)
+    for a, b in zip(cues, cues[1:]):  # never overlap: one caption on screen at a time
+        if a.end > b.start:
+            a.end = max(a.start + 0.1, b.start)
+    return cues

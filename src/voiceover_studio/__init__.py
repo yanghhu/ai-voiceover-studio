@@ -1,6 +1,6 @@
 """AI Voiceover Studio: turn scripts into voiceovers, subtitles and faceless videos."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .errors import ConfigError, NotSupported, ProviderError, TaskFailed, VoiceoverError  # noqa: E402
 from .providers import Voice, VoiceProvider, get_provider  # noqa: E402

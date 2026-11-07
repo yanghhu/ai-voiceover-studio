@@ -94,12 +94,21 @@ class VoiceProvider(ABC):
     name = "base"
     #: Largest text a single ``synthesize`` call accepts (None = unknown/unbounded).
     max_text_length: Optional[int] = None
+    #: Audio format the engine returns most cheaply (used by ``Studio.say``).
+    native_format: str = "wav"
+    #: True when :meth:`auto_voice` can pick a voice per speaker without a voices file.
+    supports_auto_voices: bool = False
 
     @abstractmethod
     def synthesize(self, text: str, voice: Voice, *, audio_format: str = "wav",
                    cache_key: Optional[str] = None) -> SynthesisResult:
         """Render ``text`` with ``voice``. ``cache_key`` is a stable id for this exact
         request; remote providers should use it as an idempotency key."""
+
+    def auto_voice(self, n: int, language: Optional[str]) -> Optional[Voice]:
+        """Voice for the ``n``-th distinct speaker when the user configured none.
+        Return ``None`` to require an explicit voice."""
+        return None
 
     def list_voices(self, limit: int = 20, offset: int = 0) -> Tuple[List[VoiceInfo], bool]:
         """Return ``(voices, has_more)``."""

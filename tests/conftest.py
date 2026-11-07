@@ -45,6 +45,14 @@ def task(status, **extra):
 SILENCE = wav_bytes(b"\x00\x00" * 2400, 24000, 1, 2)  # 0.1 s
 
 
+@pytest.fixture(autouse=True)
+def _clean_env(monkeypatch):
+    """Tests never depend on the developer's keys or engine choice, and never hit the network."""
+    for name in ("MIRAGEA_API_KEY", "MIRAGEA_BASE_URL", "OPENAI_API_KEY", "OPENAI_BASE_URL",
+                 "VOICEOVER_PROVIDER", "VOICEOVER_EDGE_PROXY"):
+        monkeypatch.delenv(name, raising=False)
+
+
 @pytest.fixture
 def fake():
     return FakeTransport()

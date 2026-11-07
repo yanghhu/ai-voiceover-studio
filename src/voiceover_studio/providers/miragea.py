@@ -30,7 +30,9 @@ from ..errors import ConfigError, ProviderError, TaskFailed
 from .base import SynthesisResult, TranscriptSegment, Voice, VoiceInfo, VoiceProvider
 
 DEFAULT_BASE_URL = "https://miragea.ai/v1"
-USER_AGENT = "ai-voiceover-studio/%s" % __version__
+# Some edge networks reject unknown clients, so identify as a regular browser plus the tool name.
+USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+              "Chrome/126.0 Safari/537.36 ai-voiceover-studio/%s" % __version__)
 TERMINAL = ("succeeded", "failed")
 RETRYABLE_STATUS = (429, 502, 503)
 
@@ -245,10 +247,21 @@ class MirageaProvider(VoiceProvider):
     """Text to speech and voice cloning through Miragea."""
 
     name = "miragea"
+    supports_auto_voices = True
 
     def __init__(self, client: Optional[MirageaClient] = None, *, fresh: bool = False, **client_kwargs: Any):
         self.client = client or MirageaClient(**client_kwargs)
         self.fresh = fresh  # True -> random idempotency keys (new take every run)
+        self._actors: Optional[List[str]] = None
+
+    def auto_voice(self, n: int, language: Optional[str]) -> Optional[Voice]:
+        """Use the voices saved in the account, in order (one listing call, no generation)."""
+        if self._actors is None:
+            self._actors = [str(a.get("actor_id")) for a in self.client.actors(20, 0).get("items", [])
+                            if a.get("actor_id") is not None]
+        if not self._actors:
+            return None
+        return Voice(actor_id=self._actors[n % len(self._actors)])
 
     @property
     def max_text_length(self) -> Optional[int]:  # type: ignore[override]

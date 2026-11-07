@@ -27,6 +27,7 @@ def estimate_seconds(text: str, speed: float = 1.0) -> float:
 class DummyProvider(VoiceProvider):
     name = "dummy"
     max_text_length = 5000
+    supports_auto_voices = True
 
     def __init__(self, sample_rate: int = 24000, tone: bool = False):
         self.sample_rate = sample_rate
@@ -45,6 +46,9 @@ class DummyProvider(VoiceProvider):
             pcm = b"\x00\x00" * frames
         return SynthesisResult(wav_bytes(pcm, self.sample_rate, 1, 2), "wav",
                                {"provider": self.name, "voice": voice.describe()})
+
+    def auto_voice(self, n: int, language: Optional[str]) -> Voice:
+        return Voice(actor_id=("dummy-narrator", "dummy-host")[n % 2])
 
     def list_voices(self, limit: int = 20, offset: int = 0) -> Tuple[List[VoiceInfo], bool]:
         voices = [VoiceInfo("dummy-narrator", "Narrator (silent)", "en"),
