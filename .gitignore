@@ -1,0 +1,28 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.env
+.env.*
+!.env.example
+# generated media
+voiceover_out/
+out/
+*.mp3
+*.wav
+*.m4a
+*.mp4
+*.srt
+!examples/**/*.srt
+# local voice maps may contain private reference URLs
+voices.json
+voices.yaml
+!examples/voices.example.json
+!examples/voices.example.yaml

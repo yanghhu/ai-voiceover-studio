@@ -1,0 +1,11 @@
+{
+  "$comment": "Copy to voices.json. Actor ids come from `voiceover voices`. A reference_audio_url clones a voice from a public audio clip you have the rights to.",
+  "default":  { "actor_id": "YOUR_ACTOR_ID" },
+  "NARRATOR": { "actor_id": "YOUR_ACTOR_ID", "model": "standard" },
+  "ALEX": {
+    "reference_audio_url": "https://example.com/alex-sample.wav",
+    "reference_text": "The exact words spoken in alex-sample.wav.",
+    "language": "en",
+    "speed": 1.0
+  }
+}

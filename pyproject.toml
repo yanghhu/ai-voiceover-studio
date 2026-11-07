@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-voiceover-studio"
+version = "0.1.0"
+description = "AI voiceover studio: text to speech, voice cloning, multi-speaker scripts, subtitles and faceless YouTube videos from the command line."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Miragea contributors" }]
+keywords = [
+  "ai voiceover", "text to speech", "tts", "voice cloning", "youtube", "faceless video",
+  "dubbing", "subtitles", "narration", "srt", "voiceover generator", "ai narrator",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Sound/Audio :: Speech",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = []
+
+[project.optional-dependencies]
+video = ["moviepy>=1.0.3"]
+yaml = ["PyYAML>=5.4"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+voiceover = "voiceover_studio.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yanghhu/ai-voiceover-studio"
+Issues = "https://github.com/yanghhu/ai-voiceover-studio/issues"
+Changelog = "https://github.com/yanghhu/ai-voiceover-studio/blob/main/CHANGELOG.md"
+"Miragea API docs" = "https://miragea.ai/v1/guide"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
