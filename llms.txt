@@ -1,31 +1,45 @@
 # AI Voiceover Studio
 
-> AI Voiceover Studio (`ai-voiceover-studio`, command `voiceover`) is an open-source MIT-licensed Python 3.9+ CLI and library that turns a Markdown script into an AI voiceover, SRT subtitles and a captioned faceless video (B-roll per paragraph with Ken Burns motion and transitions, word-by-word TikTok-style animated captions, an animated hook card, background music ducked under the voice, kinetic typography when there are no pictures) for YouTube, Shorts, Reels, TikTok and explainers. It works out of the box with free Microsoft Edge neural voices (no account, no API key); Miragea (https://miragea.ai) adds voice cloning and expressive voices; an OpenAI engine and an offline dummy engine are also built in.
+> AI Voiceover Studio (`ai-voiceover-studio`, command `voiceover`) is an open-source, MIT-licensed Python 3.9+ CLI and library that turns a Markdown script into an AI voiceover (text to speech), SRT subtitles and a captioned faceless video for YouTube, Shorts, Reels and TikTok — B-roll per paragraph with Ken Burns motion, TikTok-style word-by-word captions, an animated hook card and background music ducked under the voice. It works out of the box with free Microsoft Edge neural voices (no account, no API key); OpenAI and Miragea (voice cloning) are optional engines.
 
 Key facts:
-- Quickstart: `git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio`, `pip install -e ".[edge]"`, `voiceover video --script examples/demo.en.md --style tiktok --music ambient -o out/video.mp4` (vertical: `--vertical`). Needs ffmpeg (with libass); `voiceover doctor` checks the setup.
-- Engines: `edge` (free, default without MIRAGEA_API_KEY, 322 voices / 75 languages, extra `[edge]`), `miragea` (MIRAGEA_API_KEY; voice cloning from a reference URL, expressive models, subtitle recognition; default when the key is set), `openai` (OPENAI_API_KEY), `dummy` (`--dry-run`, offline). Select with `--provider` or `VOICEOVER_PROVIDER`.
-- Commands: `voiceover say "text" [--voice ID|URL] -o out.mp3`; `voiceover script script.md [--voices voices.json] -o out/`; `voiceover video --script script.md -o video.mp4 [--vertical] [--style tiktok|clean|bold|minimal|box] [--music ambient|pulse|file.mp3] [--music-volume 0.5] [--no-duck] [--hook TEXT] [--transition-style mix|fade|slide|zoom|cut] [--grade cinematic|none] [--images dir/] [--font file.ttf]`; `voiceover voices [--provider edge --filter en-GB]`; `voiceover doctor [--online]`; `voiceover task <id> --wait` (Miragea). `--json` gives machine-readable output.
-- Script format: `[SPEAKER]: text` lines in Markdown/TXT, untagged lines continue the speaker, `[pause 1.5]` inserts silence, `[SPEAKER](tags=a|b, speed=1.1): ...` sets per-line options, `![](clip.mp4)` sets the B-roll of the paragraph, `**bold**` words are highlighted in captions. Speakers without a configured voice get distinct voices automatically.
-- Outputs: audio track (MP3/WAV), SRT (timed from engine sentence boundaries or segment durations, or speech recognition), per-segment cache, manifest.json, MP4.
-- Reliability: per-line cache, deterministic idempotency keys, async task polling (Miragea), retries only on retryable errors, keys never printed or stored. Core has zero third-party dependencies.
-- Agent skill for Claude Code / Codex / Cursor: skills/ai-voiceover/SKILL.md.
+
+- Install: `git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio && pip install -e ".[edge]"`. Needs ffmpeg (with libass) for MP3 and video; `voiceover doctor` checks the setup. Not yet published on PyPI.
+- Faceless video: `voiceover video --script examples/demo.en.md --style tiktok --music ambient -o out/video.mp4`; vertical Short: add `--vertical`.
+- Audio + subtitles only: `voiceover script script.md -o out/` → `voiceover.mp3`, `voiceover.srt`, `manifest.json`. One line: `voiceover say "text" -o out.mp3`.
+- Script format: `[SPEAKER]: text` lines, `[pause 1.5]`, `[SPEAKER](tags=a|b, speed=1.1, lang=es): ...`, `![](clip.mp4)` sets the B-roll of the next paragraph, `**bold**` words are highlighted in captions. Each speaker automatically gets its own voice (edge engine); `--lang` sets the language for Latin-script languages other than English.
+- Engines: `edge` (free, default without MIRAGEA_API_KEY, 300+ voices / 70+ languages), `miragea` (MIRAGEA_API_KEY; voice cloning from a reference URL, expressive models, subtitle recognition; default when the key is set), `openai` (OPENAI_API_KEY), `dummy` (`--dry-run`, offline). Custom engines via the `VoiceProvider` interface and the `ai_voiceover_studio.providers` entry point.
+- Caption styles: `tiktok` (default vertical), `clean` (default landscape), `bold`, `minimal`, `box`. Music: `--music ambient|pulse` (generated at render time, royalty-free) or a file; `--no-duck` disables ducking.
+- Agent use: every command supports `--json`; exit codes 0 ok, 1 task failed, 2 usage/API error; agent skill at skills/ai-voiceover/SKILL.md.
+- It does not include a timeline editor, stock-footage library, lip-sync or automatic translation.
 
 ## Docs
-- [README](README.md): quickstart, engines, scripts, subtitles, video options, Python API, architecture, comparison, roadmap
-- [FAQ](docs/FAQ.md): question-and-answer reference (free engine, voice cloning, languages, subtitles, faceless and vertical video, doctor, API key safety)
-- [Agent skill](skills/ai-voiceover/SKILL.md): step-by-step workflow for AI coding agents
-- [Demo video](docs/assets/demo.mp4), [demo GIF](docs/assets/demo.gif), [sample voiceover MP3](docs/assets/sample-voiceover.mp3)
-- [16:9 demo script with B-roll](examples/demo.en.md), [9:16 Chinese Short script](examples/demo.zh.md), [vertical demo GIF](docs/assets/demo-short-zh.gif), [Example script](examples/script.md), [Chinese example](examples/script.zh.md) and [voices map](examples/voices.example.json)
-- [Changelog](CHANGELOG.md)
 
-## Translations
-- [简体中文](README.zh-CN.md)
-- [日本語](README.ja.md)
-- [Español](README.es.md)
+- [README](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/README.md): quickstart, what it is, who it is for, use cases, engines, script format, subtitles, video options, Python API, architecture, comparison
+- [FAQ](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/FAQ.md): answers to common questions (free faceless YouTube videos, word-by-word captions in Python, open-source TTS for YouTube, Shorts, languages, voice cloning, API keys)
+- [Full documentation in one file](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/llms-full.txt): README, FAQ, use-case guides and agent skill concatenated
+- [Agent skill](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/skills/ai-voiceover/SKILL.md): step-by-step workflow for Claude Code, Codex, Cursor and other AI coding agents
+
+## Use cases
+
+- [Faceless YouTube video](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/use-cases/faceless-youtube.md): 16:9 narrated video with B-roll, captions and music from one script
+- [Shorts, Reels and TikTok](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/use-cases/shorts-reels-tiktok.md): 9:16 video with word-by-word captions in the safe area
+- [Explainer and movie-recap narration](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/use-cases/explainer-and-recap-narration.md): narration over your own clips or slides
+- [Multilingual dubbing](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/use-cases/multilingual-dubbing.md): the same video in several languages from translated scripts
+- [Podcast and audiobook snippets](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/docs/use-cases/podcast-and-audiobook-snippets.md): multi-voice audio clips with SRT
+
+## Examples
+
+- [16:9 demo script with B-roll](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/examples/demo.en.md): the script behind the demo video
+- [9:16 Chinese Short script](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/examples/demo.zh.md): the script behind the vertical demo
+- [Two-voice explainer script](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/examples/script.md), also in [Chinese](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/examples/script.zh.md) and [Spanish](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/examples/script.es.md)
+- [Voices map for the edge engine](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/examples/voices.edge.json)
+- [Demo video (MP4)](https://github.com/yanghhu/ai-voiceover-studio/raw/main/docs/assets/demo.mp4) and [vertical demo (MP4)](https://github.com/yanghhu/ai-voiceover-studio/raw/main/docs/assets/demo-short-zh.mp4)
 
 ## Optional
-- [Miragea API guide](https://miragea.ai/v1/guide)
-- [Miragea API schema](https://miragea.ai/v1/schema)
-- [Contributing](CONTRIBUTING.md)
-- [License: MIT](LICENSE)
+
+- [Changelog](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/CHANGELOG.md)
+- [Contributing](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/CONTRIBUTING.md)
+- [简体中文 README](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/README.zh-CN.md), [日本語 README](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/README.ja.md), [Español README](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/README.es.md)
+- [Miragea API guide](https://miragea.ai/v1/guide): only needed for the optional Miragea engine
+- [Citation metadata](https://raw.githubusercontent.com/yanghhu/ai-voiceover-studio/main/CITATION.cff)

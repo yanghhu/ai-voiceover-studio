@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and answers (FAQ)
+    url: https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/FAQ.md
+    about: Many questions are already answered here.
+  - name: Report a security vulnerability
+    url: https://github.com/yanghhu/ai-voiceover-studio/security/advisories/new
+    about: Please report security issues privately.

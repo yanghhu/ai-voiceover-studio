@@ -1,10 +1,9 @@
+# AI Voiceover Studio — オープンソースの AI ナレーション・顔出しなし動画ジェネレーター
+**AI Voiceover Studio** は、台本テキストから AI ナレーション（テキスト読み上げ・音声合成）、SRT 字幕、TikTok 風の一語ずつ光る字幕付きの顔出しなし動画をコマンド一つで自動生成する、オープンソースの Python CLI です。無料の音声付きで、API キーは不要です。
+
 <div align="center">
 
 [English](README.md) · [简体中文](README.zh-CN.md) · **日本語** · [Español](README.es.md)
-
-# AI Voiceover Studio — YouTube・顔出しなし動画のための AI ナレーション、音声合成（TTS）、ボイスクローン
-
-**AI Voiceover Studio は、Markdown の台本をコマンド一つで AI ナレーション、SRT 字幕、字幕付きの顔出しなし（faceless）動画に変えるオープンソースの Python CLI／ライブラリです。無料のニューラル音声ですぐに動き（アカウント・API キー不要）、Miragea を使えばボイスクローンや表現力豊かな声も利用できます。**
 
 [![Tests](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
@@ -42,6 +41,31 @@ voiceover doctor                                 # ffmpeg・エンジン・キ�
 ```
 
 声の設定ファイルは不要です。台本の話者ごとに、台本の言語に合った別々の声が自動で割り当てられます。
+
+## AI Voiceover Studio とは？
+
+AI Voiceover Studio は、台本からナレーション付き動画を作るための無料・MIT ライセンスのコマンドラインツール兼 Python ライブラリです。Markdown でナレーションを書き（話者タグ、ポーズ、段落ごとの画像や動画クリップも指定可能）、`voiceover` コマンドを実行すると、ナレーション音声（MP3/WAV）、SRT 字幕、そして B ロール・Ken Burns 効果・トランジション・一語ずつ表示されるアニメーション字幕・声の下で自動的に下がる BGM を備えた MP4 が出力されます。Python 3.9+ と ffmpeg があれば手元の PC で動き、既定では無料の Microsoft Edge ニューラル音声（300 以上の声、70 以上の言語）を使い、フラグ一つで OpenAI や Miragea（ボイスクローン）など他の音声合成エンジンに切り替えられます。
+
+## こんな人におすすめ
+
+- **顔出しなし YouTube チャンネル**：解説、ランキング、歴史・科学系のナレーション動画を定期投稿する方。
+- **ショート動画クリエイター**：YouTube ショート、Instagram リール、TikTok 向けの縦型動画に大きな一語ずつの字幕を付けたい方。
+- **教育者・講座制作者**：何度でも修正できる台本からチュートリアルや授業動画を作りたい方。
+- **ローカライズ・吹き替えチーム**：翻訳済み台本から同じ動画を多言語で制作したい方。
+- **ポッドキャスト・オーディオブック制作者**：台本ベースのイントロ、予告、広告読み、試聴用チャプターが必要な方。
+- **開発者と AI エージェント**：コード、CI、Claude Code・Codex・Cursor からナレーションや動画を生成したい方。
+
+## 活用例
+
+各ガイドには、同梱のサンプルでそのまま動くコマンドがあります。
+
+| 活用例 | 得られるもの | ガイド（英語） |
+| --- | --- | --- |
+| 顔出しなし YouTube 動画 | 台本一つから 16:9 のナレーション動画（B ロール、字幕、BGM） | [faceless-youtube.md](docs/use-cases/faceless-youtube.md) |
+| ショート / リール / TikTok | セーフエリア内に大きな一語ずつ字幕を入れた 9:16 動画 | [shorts-reels-tiktok.md](docs/use-cases/shorts-reels-tiktok.md) |
+| 解説・映画あらすじのナレーション | 手持ちのクリップやスライドに段落ごとに合わせたナレーション | [explainer-and-recap-narration.md](docs/use-cases/explainer-and-recap-narration.md) |
+| 多言語吹き替え | 翻訳した台本から同じ動画を複数言語で | [multilingual-dubbing.md](docs/use-cases/multilingual-dubbing.md) |
+| ポッドキャスト・オーディオブックの断片 | 複数の声の音声クリップ（イントロ、予告、試聴章）+ SRT | [podcast-and-audiobook-snippets.md](docs/use-cases/podcast-and-audiobook-snippets.md) |
 
 ## 機能
 
@@ -130,9 +154,27 @@ voiceover video --script notes.md -o explainer.mp4                              
 
 **API キーなしで使えますか？** はい。既定の `edge` エンジンは無料でアカウント不要、`--dry-run` は完全にオフラインです。Miragea のキーがあればボイスクローンや表現力豊かな声も使えます。
 
-## アーキテクチャ・比較・ロードマップ
+## 比較
 
-詳細は英語版の [Architecture](README.md#architecture)、[How it compares](README.md#how-it-compares)、[Roadmap](README.md#roadmap) を参照してください。
+ナレーション付き・字幕付き動画を作る代表的な方法との中立的な比較です。「通常」はカテゴリ全般の傾向で、特定の製品を指すものではありません。
+
+| | 動画編集アプリでの手作業（例：CapCut） | ホスト型 AI 動画生成サービス（SaaS 全般） | TTS API を自作コードで呼ぶ | **AI Voiceover Studio** |
+| --- | --- | --- | --- | --- |
+| 入力 | タイムラインに文字を貼り、素材を手で配置 | Web フォームやプロンプト | 自作コード | Markdown の台本（git で管理可能） |
+| 実行場所 | デスクトップ / モバイルアプリ | サービスのクラウド | コードを動かす場所 | 手元の PC（Python + ffmpeg）。テキストは選んだ音声エンジンにのみ送信 |
+| ソースコード / ライセンス | クローズドソース | 通常はクローズドソース、アカウント必須 | API による | オープンソース（MIT） |
+| 台本の一行を変更 | 手で編集・再調整 | Web 上で再生成 | キャッシュを自作 | コマンドを再実行。変更した行だけを再生成 |
+| 一語ずつの字幕 | 自動字幕あり、スタイルはプロジェクトごとに調整 | 製品による | 別工程 | 標準搭載。エンジンの単語タイミングに同期 |
+| 複数話者の台本 | 音声トラックを一本ずつ | 製品による | 自作コード | `[名前]:` タグで話者ごとに自動で声を割り当て |
+| バッチ・CI・AI エージェント | 不可 | 一部製品で API あり | 可能 | CLI の `--json`、Python API、エージェントスキル |
+| 音声エンジン | アプリ内蔵の声 | サービスの声 | 単一 API | 無料の Edge 音声、OpenAI、Miragea（クローン）、独自エンジン |
+| タイムライン編集・テンプレート・素材ライブラリ | ✅ フル機能 | ✅ 通常あり | — | ❌ なし：B ロールは自分で用意、またはキネティックタイポグラフィ |
+
+タイムライン編集やリップシンクが必要な場合は、編集アプリと併用してください。このツールは「台本を入れて、ナレーション・字幕・すっきりした動画を出す」ことに特化しています。
+
+## アーキテクチャ・ロードマップ
+
+詳細は英語版の [Architecture](README.md#architecture) と [Roadmap](README.md#roadmap) を参照してください。
 
 ## コントリビュート
 

@@ -1,10 +1,9 @@
+# AI Voiceover Studio — generador de locución con IA y vídeos sin rostro, de código abierto
+**AI Voiceover Studio** es una herramienta CLI de Python de código abierto que convierte un guion en una locución con IA (texto a voz), subtítulos SRT y un vídeo sin rostro listo para YouTube, Shorts o TikTok con subtítulos palabra por palabra, con un solo comando: incluye voces gratuitas y no necesita clave de API.
+
 <div align="center">
 
 [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · **Español**
-
-# AI Voiceover Studio — locución con IA, texto a voz y clonación de voz para YouTube y vídeos sin rostro
-
-**AI Voiceover Studio es una herramienta de línea de comandos y librería de Python de código abierto que convierte un guion en Markdown en una locución con IA, subtítulos SRT y un vídeo sin rostro (faceless) con subtítulos, con un solo comando. Funciona al instante con voces neuronales gratuitas (sin cuenta ni clave de API) y se conecta a Miragea para clonación de voz y voces expresivas.**
 
 [![Tests](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
@@ -42,6 +41,31 @@ voiceover doctor                                 # ffmpeg, motores, claves y fue
 ```
 
 No hace falta archivo de voces: cada personaje del guion recibe automáticamente una voz distinta según el idioma del guion.
+
+## ¿Qué es AI Voiceover Studio?
+
+AI Voiceover Studio es una herramienta de línea de comandos y librería de Python, gratuita y con licencia MIT, para convertir guiones escritos en vídeos narrados. Escribes la narración en Markdown —con etiquetas de personaje, pausas y una imagen o clip por párrafo si quieres— y el comando `voiceover` genera el audio de la locución (MP3/WAV), los subtítulos SRT y un MP4 con B-roll, movimiento Ken Burns, transiciones, subtítulos animados palabra por palabra y música de fondo que baja sola cuando habla la voz. Funciona en tu propio equipo con Python 3.9+ y ffmpeg, usa por defecto las voces neuronales gratuitas de Microsoft Edge (más de 300 voces y 70 idiomas) y puede cambiar a otros motores de texto a voz, como OpenAI o Miragea (clonación de voz), con una sola opción.
+
+## Para quién es
+
+- **Canales de YouTube sin rostro** que publican explicaciones, tops, historia o ciencia narrados con regularidad.
+- **Creadores de vídeo corto** que hacen Shorts, Reels y TikToks verticales con subtítulos grandes palabra por palabra.
+- **Docentes y autores de cursos** que quieren narrar tutoriales y clases a partir de un guion que pueden seguir editando.
+- **Equipos de localización y doblaje** que producen el mismo vídeo en varios idiomas a partir de guiones traducidos.
+- **Productores de pódcast y audiolibros** que necesitan intros, tráileres, cuñas y capítulos de muestra a partir de texto.
+- **Desarrolladores y agentes de IA** que generan narraciones o vídeos desde código, en CI o desde Claude Code, Codex y Cursor.
+
+## Casos de uso
+
+Cada guía incluye un comando listo para copiar que funciona con los ejemplos incluidos.
+
+| Caso de uso | Qué obtienes | Guía (en inglés) |
+| --- | --- | --- |
+| Vídeo de YouTube sin rostro | Vídeo narrado 16:9 con B-roll, subtítulos y música a partir de un guion | [faceless-youtube.md](docs/use-cases/faceless-youtube.md) |
+| Shorts / Reels / TikTok | Vídeo 9:16 con subtítulos grandes palabra por palabra en la zona segura | [shorts-reels-tiktok.md](docs/use-cases/shorts-reels-tiktok.md) |
+| Narración de explicaciones y resúmenes de películas | Narración sobre tus propios clips o diapositivas, párrafo a párrafo | [explainer-and-recap-narration.md](docs/use-cases/explainer-and-recap-narration.md) |
+| Doblaje multilingüe | El mismo vídeo locutado en varios idiomas desde guiones traducidos | [multilingual-dubbing.md](docs/use-cases/multilingual-dubbing.md) — en español: `voiceover script examples/script.es.md --lang es -o out/es/` |
+| Fragmentos de pódcast y audiolibro | Clips de audio con varias voces (intros, tráileres, capítulos de muestra) + SRT | [podcast-and-audiobook-snippets.md](docs/use-cases/podcast-and-audiobook-snippets.md) |
 
 ## Funciones
 
@@ -126,9 +150,27 @@ Más respuestas en [docs/FAQ.md](docs/FAQ.md) (en inglés).
 
 **¿Necesito una clave de API?** No. El motor `edge` por defecto es gratuito y sin cuenta, y `--dry-run` funciona sin conexión. Una clave de Miragea añade clonación de voz y voces expresivas.
 
-## Arquitectura, comparación y hoja de ruta
+## Comparación
 
-Consulta [Architecture](README.md#architecture), [How it compares](README.md#how-it-compares) y [Roadmap](README.md#roadmap) en la versión en inglés.
+Una comparación neutral con las formas más habituales de hacer un vídeo narrado y subtitulado. «Normalmente» describe la categoría en general, no un producto concreto.
+
+| | Flujo manual en un editor de vídeo (p. ej. CapCut) | Generadores de vídeo con IA alojados (SaaS, en general) | Llamar a una API de TTS con tu propio código | **AI Voiceover Studio** |
+| --- | --- | --- | --- | --- |
+| Entrada | línea de tiempo: pegar texto y arrastrar clips a mano | formulario web o prompt | tu código | un guion en Markdown (funciona con git) |
+| Dónde se ejecuta | aplicación de escritorio / móvil | la nube del proveedor | donde corra tu código | tu equipo (Python + ffmpeg); el texto solo va al motor de voz que elijas |
+| Código fuente / licencia | código cerrado | normalmente cerrado, requiere cuenta | depende de la API | código abierto, MIT |
+| Cambiar una frase del guion | editar y reajustar a mano | regenerar en la web | tu propia caché | volver a ejecutar un comando; solo se regeneran las líneas cambiadas |
+| Subtítulos palabra por palabra | subtítulos automáticos, con estilo por proyecto | depende del producto | paso aparte | incluidos, sincronizados con los tiempos de palabra del motor |
+| Guiones con varios personajes | una pista de voz cada vez | depende del producto | tu propio código | etiquetas `[NOMBRE]:`, una voz por personaje automáticamente |
+| Lotes, CI y agentes de IA | no | API en algunos productos | sí | CLI con `--json`, API de Python, skill para agentes |
+| Motores de voz | las voces de la app | las voces del proveedor | una API | voces gratuitas de Edge, OpenAI, Miragea (clonación) o tu propio motor |
+| Edición en línea de tiempo, plantillas, banco de imágenes | ✅ editor completo | ✅ normalmente incluido | — | ❌ no incluido: aporta tu propio B-roll o usa tipografía cinética |
+
+Si necesitas un editor completo o sincronización labial, usa un editor junto a esta herramienta: hace bien una sola cosa — entra un guion; salen la locución, los subtítulos y un vídeo limpio.
+
+## Arquitectura y hoja de ruta
+
+Consulta [Architecture](README.md#architecture) y [Roadmap](README.md#roadmap) en la versión en inglés.
 
 ## Contribuir
 

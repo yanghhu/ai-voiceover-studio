@@ -110,6 +110,21 @@ def test_auto_voices_per_speaker(tmp_path):
     assert voices == {"NARRATOR": "actor:dummy-narrator", "ALEX": "actor:dummy-host"}
 
 
+def test_lang_override_picks_auto_voices(tmp_path):
+    script = tmp_path / "s.md"
+    script.write_text("[NARRADOR]: Hola a todos.\n\n[ALEX]: Gracias.", encoding="utf-8")
+    seen = []
+
+    class Recorder(DummyProvider):
+        def auto_voice(self, n, language):
+            seen.append(language)
+            return super().auto_voice(n, language)
+
+    Studio(Recorder()).render_script(script, tmp_path / "o", output_name="a.wav",
+                                     voice_overrides=Voice(language="es"))
+    assert seen == ["es", "es"]
+
+
 def test_explicit_voice_wins_over_auto(tmp_path):
     script = tmp_path / "s.md"
     script.write_text(SCRIPT, encoding="utf-8")

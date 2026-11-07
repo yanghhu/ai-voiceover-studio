@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please remove API keys and private URLs from everything you paste.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or code
+      description: The exact command (ideally with `--json -v`) or Python code, and a minimal script that reproduces it.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output / error
+      render: text
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`voiceover doctor` output"
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `voiceover --version`
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Voice engine
+      options: [edge, miragea, openai, dummy / --dry-run, custom provider]
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS, Python and ffmpeg versions
+      placeholder: "Ubuntu 24.04, Python 3.12, ffmpeg 6.1"

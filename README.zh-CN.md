@@ -1,10 +1,9 @@
+# AI Voiceover Studio — 开源 AI 配音与无人出镜视频生成器
+**AI Voiceover Studio** 是一个开源的 Python 命令行工具：把一份文字脚本自动变成 AI 配音（文字转语音）、SRT 字幕和带逐字字幕的无人出镜视频，一条命令完成短视频自动生成，自带免费音色，无需 API Key。
+
 <div align="center">
 
 [English](README.md) · **简体中文** · [日本語](README.ja.md) · [Español](README.es.md)
-
-# AI Voiceover Studio — 一份脚本生成 AI 配音、字幕和无人出镜视频
-
-**AI Voiceover Studio 是一个开源的 Python 命令行工具和库：一条命令把 Markdown 脚本变成完整的 AI 配音——多角色旁白、SRT 字幕，以及带字幕的无人出镜（faceless）视频。开箱即用免费神经网络语音（无需账号、无需 API Key），接入 Miragea 后还支持声音克隆和更有表现力的声音。**
 
 [![Tests](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
@@ -44,6 +43,31 @@ voiceover doctor                                    # 检查 ffmpeg、引擎、�
 ```
 
 不需要音色配置文件：脚本里的每个角色会按脚本语言自动分配不同的声音（中文默认云希 / 晓晓）。
+
+## AI Voiceover Studio 是什么？
+
+AI Voiceover Studio 是一个免费、MIT 开源的命令行工具和 Python 库，用来把文字脚本做成带配音的视频。你用 Markdown 写旁白——可以加角色标签、停顿，并给每段配一张图或一段视频——`voiceover` 命令就会生成配音音频（MP3/WAV）、SRT 字幕，以及一个 MP4：逐段配图、Ken Burns 运镜和转场、抖音风格的逐字（逐词）动态字幕、说话时自动压低的背景音乐。它在你自己的电脑上运行（Python 3.9+ 和 ffmpeg），默认使用免费的微软 Edge 神经网络语音（300+ 音色、70+ 种语言），加一个参数即可换成 OpenAI 或 Miragea（声音克隆）等其他文字转语音引擎。
+
+## 适合谁用
+
+- **无人出镜 YouTube / B 站频道**：定期发布讲解、盘点、历史、科普类配音视频。
+- **短视频创作者**：做抖音、快手、视频号、YouTube Shorts、Reels 竖屏视频，需要醒目的逐字字幕。
+- **老师和课程作者**：用一份可以反复修改的脚本给教程、课件配音。
+- **本地化和配音团队**：根据翻译好的脚本，把同一个视频做成多种语言版本。
+- **播客和有声书制作者**：需要脚本化的片头、预告、口播广告和试听章节。
+- **开发者和 AI Agent**：在代码、CI 或 Claude Code、Codex、Cursor 中批量生成配音和视频。
+
+## 使用场景
+
+每篇指南都有一条可以直接复制运行的命令（使用仓库自带示例）。
+
+| 场景 | 得到什么 | 指南（英文） |
+| --- | --- | --- |
+| 无人出镜 YouTube 视频 | 一份脚本生成 16:9 配音视频：配图、字幕、音乐 | [faceless-youtube.md](docs/use-cases/faceless-youtube.md) |
+| 抖音 / Shorts / Reels / TikTok | 9:16 竖屏视频，安全区内的大号逐字字幕 | [shorts-reels-tiktok.md](docs/use-cases/shorts-reels-tiktok.md) |
+| 知识讲解、电影解说配音 | 给你自己的素材或幻灯片配旁白，按段落对齐 | [explainer-and-recap-narration.md](docs/use-cases/explainer-and-recap-narration.md) |
+| 多语言配音 | 用翻译后的脚本把同一个视频配成多种语言 | [multilingual-dubbing.md](docs/use-cases/multilingual-dubbing.md) |
+| 播客、有声书片段 | 多角色音频片段（片头、预告、试听章节）+ SRT | [podcast-and-audiobook-snippets.md](docs/use-cases/podcast-and-audiobook-snippets.md) |
 
 ## 为什么做这个
 
@@ -202,15 +226,21 @@ print(result.audio_path, result.srt_path)
 
 ## 对比
 
-| | 自己录音 | 网页 TTS 编辑器 | 直接调用 TTS API | **AI Voiceover Studio** |
+与两种最常见的“配音 + 字幕视频”做法的中立对比。“通常”指这一类工具的一般情况，不针对任何具体产品。
+
+| | 剪辑软件手动流程（如剪映 / CapCut） | 在线 AI 视频生成平台（SaaS，一般情况） | 自己写代码调用 TTS API | **AI Voiceover Studio** |
 | --- | --- | --- | --- | --- |
-| 一个文件写完多角色脚本 | 手动 | 通常逐段 | 需自己写代码 | ✅ 内置 |
-| 只重新生成改动的行 | 重录 | 手动 | 需自己写代码 | ✅ 缓存 + 幂等 |
-| 字幕 | 另做 | 不一定 | 另做 | ✅ 自带 SRT |
-| 无人出镜视频 | 剪辑软件 | 不一定 | 无 | ✅ 可选 |
-| 可脚本化 / CI / Agent | 否 | 否 | 是 | ✅ |
-| 更换引擎 | — | 否 | 重写 | ✅ 引擎接口 |
-| 真人表演感 | ✅ 最好 | 取决于引擎 | 取决于引擎 | 取决于引擎 |
+| 输入方式 | 时间线：粘贴文字、手动拖素材 | 网页表单或提示词 | 你的代码 | 一个 Markdown 脚本（可用 git 管理） |
+| 运行位置 | 桌面 / 手机 App | 平台的云端 | 你的代码运行处 | 你自己的电脑（Python + ffmpeg）；文字只发送给你选择的语音引擎 |
+| 源代码 / 许可 | 闭源 | 通常闭源，需要注册账号 | 取决于 API | 开源，MIT |
+| 改了脚本里的一句话 | 手动重新编辑、对齐 | 在网页里重新生成 | 自己实现缓存 | 重跑一条命令，只重新生成改动的行 |
+| 逐字字幕 | 有自动字幕，样式逐个项目调整 | 因产品而异 | 另做 | 内置，按引擎返回的词级时间对齐 |
+| 多角色脚本 | 一次处理一条配音轨 | 因产品而异 | 自己写代码 | `[角色]:` 标签，每个角色自动分配声音 |
+| 批量、CI、AI Agent | 否 | 部分产品提供 API | 是 | 命令行 `--json`、Python API、Agent 技能 |
+| 语音引擎 | App 自带音色 | 平台自带音色 | 单一 API | 免费 Edge 音色、OpenAI、Miragea（声音克隆）或自定义引擎 |
+| 时间线剪辑、模板、素材库 | ✅ 完整剪辑器 | ✅ 通常提供 | — | ❌ 不提供：自带配图，或使用关键词大字动画 |
+
+如果需要完整的时间线剪辑或口型同步，请搭配剪辑软件使用——本工具专注做好一件事：输入脚本，输出配音、字幕和干净的成片。
 
 ## 常见问题
 

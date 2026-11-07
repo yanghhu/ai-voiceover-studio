@@ -1,10 +1,9 @@
+# AI Voiceover Studio — open-source AI voiceover and faceless video generator
+**AI Voiceover Studio** is an open-source Python CLI that works as an AI voiceover tool and faceless YouTube video generator: it turns a plain script into natural text to speech, SRT subtitles and a finished text-to-speech video with TikTok-style word-by-word captions — free voices included, no API key needed.
+
 <div align="center">
 
 **English** · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [Español](README.es.md)
-
-# AI Voiceover Studio — text to speech, subtitles & faceless videos from a script
-
-**AI Voiceover Studio is an open-source Python CLI and library that turns a Markdown script into a finished AI voiceover — multi-speaker narration, SRT subtitles and a captioned faceless video — in one command. It works out of the box with free neural voices (no account, no API key), and plugs into Miragea for voice cloning and expressive voices.**
 
 [![Tests](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/yanghhu/ai-voiceover-studio/actions/workflows/tests.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
@@ -46,8 +45,36 @@ voiceover doctor                                      # ffmpeg, engines, keys, f
 
 No voices file is needed: every speaker in the script automatically gets its own voice, chosen from the script's language.
 
+## What is AI Voiceover Studio?
+
+AI Voiceover Studio is a free, MIT-licensed command-line tool and Python library for turning written scripts into narrated videos. You write narration in Markdown — optionally with speaker tags, pauses and one image or clip per paragraph — and the `voiceover` command produces the voiceover audio (MP3/WAV), SRT subtitles and an MP4 with B-roll, Ken Burns motion, transitions, word-by-word animated captions and background music ducked under the voice. It runs on your own machine with Python 3.9+ and ffmpeg, uses free Microsoft Edge neural voices by default (300+ voices, 70+ languages), and can switch to other text-to-speech engines such as OpenAI or Miragea (voice cloning) with one flag.
+
+## Who is it for
+
+- **Faceless YouTube channels** that publish narrated explainers, top-10s, history or science videos on a schedule.
+- **Short-form creators** making vertical Shorts, Reels and TikToks with bold, word-by-word captions.
+- **Educators and course authors** who want tutorials and lessons narrated from a script they can keep editing.
+- **Localization and dubbing teams** producing the same video in several languages from translated scripts.
+- **Podcasters and audiobook producers** who need scripted intros, trailers, ads and sample chapters.
+- **Developers and AI agents** that generate narration or videos from code, in CI, or from Claude Code, Codex and Cursor.
+
+## Use cases
+
+Each guide has a copy-paste command that runs on the bundled examples.
+
+| Use case | What you get | Guide |
+| --- | --- | --- |
+| Faceless YouTube video | 16:9 narrated video with B-roll, captions and music from one script | [docs/use-cases/faceless-youtube.md](docs/use-cases/faceless-youtube.md) |
+| Shorts / Reels / TikTok | 9:16 video with large TikTok-style word-by-word captions in the safe area | [docs/use-cases/shorts-reels-tiktok.md](docs/use-cases/shorts-reels-tiktok.md) |
+| Explainer and movie-recap narration | Narration over your own clips or slides, timed paragraph by paragraph | [docs/use-cases/explainer-and-recap-narration.md](docs/use-cases/explainer-and-recap-narration.md) |
+| Multilingual dubbing | The same video voiced in several languages from translated scripts | [docs/use-cases/multilingual-dubbing.md](docs/use-cases/multilingual-dubbing.md) |
+| Podcast and audiobook snippets | Multi-voice audio clips (intros, trailers, sample chapters) with SRT | [docs/use-cases/podcast-and-audiobook-snippets.md](docs/use-cases/podcast-and-audiobook-snippets.md) |
+
 ## Table of contents
 
+- [What is AI Voiceover Studio?](#what-is-ai-voiceover-studio)
+- [Who is it for](#who-is-it-for)
+- [Use cases](#use-cases)
 - [Why this exists](#why-this-exists)
 - [Features](#features)
 - [Voice engines](#voice-engines)
@@ -316,19 +343,21 @@ myengine = "my_package.provider:MyProvider"
 
 ## How it compares
 
-A neutral look at common ways to produce a voiceover:
+A neutral comparison with the two most common ways to make a narrated, captioned video. "Typical" describes the category in general, not any specific product.
 
-| | Recording yourself | Web TTS editor | Calling a TTS API directly | **AI Voiceover Studio** |
+| | Manual workflow in a video editor (e.g. CapCut) | Hosted AI video generators (SaaS, in general) | Calling a TTS API with your own code | **AI Voiceover Studio** |
 | --- | --- | --- | --- | --- |
-| Multi-speaker script in one file | manual | usually per-clip | you write the code | ✅ built in |
-| Re-generate only changed lines | re-record | manual | you write the code | ✅ cache + idempotency |
-| Subtitles | separate step | varies | separate step | ✅ SRT included |
-| Captioned faceless video | editor | varies | no | ✅ one command: B-roll, animated captions, music |
-| Scriptable / CI / AI agents | no | no | yes | ✅ CLI, `--json`, Python API |
-| Swap engines | — | no | rewrite | ✅ provider interface |
-| Natural human performance | ✅ best | depends on engine | depends on engine | depends on engine |
+| Input | timeline: paste text, drag clips by hand | web form or prompt | your code | a Markdown script (works with git) |
+| Where it runs | desktop / mobile app | the vendor's cloud | wherever your code runs | your machine (Python + ffmpeg); text goes only to the voice engine you pick |
+| Source code / licence | closed source | typically closed source, account required | depends on the API | open source, MIT |
+| Change one line of the script | edit and re-time by hand | regenerate in the web app | your own caching logic | re-run one command; only changed lines are regenerated |
+| Word-by-word captions | auto captions available, styled per project | varies by product | separate step | built in, timed from the engine's word boundaries |
+| Multi-speaker scripts | one voice track at a time | varies by product | your own code | `[NAME]:` tags, one voice per speaker automatically |
+| Batch, CI and AI agents | no | API on some products | yes | CLI with `--json`, Python API, agent skill |
+| Voice engines | the app's voices | the vendor's voices | one API | free Edge voices, OpenAI, Miragea (cloning), or your own provider |
+| Timeline editing, templates, stock library | ✅ full editor | ✅ typically included | — | ❌ not included: bring your own B-roll, or use kinetic typography |
 
-If you need a full timeline editor or lip-sync, use a video editor alongside this tool — it intentionally does one job well: script in, voiceover, captions and a clean video out.
+If you need a full timeline editor or lip-sync, use an editor alongside this tool — it intentionally does one job well: script in; voiceover, captions and a clean video out.
 
 ## FAQ
 
@@ -383,7 +412,9 @@ pip install -e ".[dev,edge,yaml]"
 pytest                      # fully offline: engines and HTTP are mocked, no key needed
 ```
 
-Keep the core dependency-free, add tests with mocked network calls, and never commit keys or generated media (except the curated demo files in `docs/assets/`).
+Keep the core dependency-free, add tests with mocked network calls, and never commit keys or generated media (except the curated demo files in `docs/assets/`). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) and report security issues as described in [SECURITY.md](SECURITY.md).
+
+If you use AI Voiceover Studio in research or a publication, cite it with [CITATION.cff](CITATION.cff) (GitHub's *Cite this repository* button).
 
 ## License
 

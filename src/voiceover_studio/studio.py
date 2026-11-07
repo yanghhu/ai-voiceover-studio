@@ -105,7 +105,8 @@ class Studio:
             raise ConfigError("Script %s has no speakable text" % script)
         voice_map = dict(voices) if isinstance(voices, dict) else load_voices(voices)
         fallback = Voice.parse(default_voice) if isinstance(default_voice, str) else default_voice
-        language = _guess_language(" ".join(s.text for s in segments))
+        language = ((voice_overrides.language if voice_overrides is not None else None)
+                    or _guess_language(" ".join(s.text for s in segments)))
         if fallback is None and "DEFAULT" not in voice_map and self.provider.supports_auto_voices:
             # No voice configured for some speakers: give each one its own voice.
             n = 0

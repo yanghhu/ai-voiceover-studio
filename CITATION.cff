@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use AI Voiceover Studio in your work, please cite it using these metadata."
+type: software
+title: "AI Voiceover Studio"
+abstract: >-
+  An open-source Python CLI and library that turns a Markdown script into an AI voiceover
+  (text to speech), SRT subtitles and a captioned faceless video for YouTube, Shorts, Reels
+  and TikTok, with B-roll per paragraph, word-by-word animated captions and background music
+  ducked under the voice. Works with free Microsoft Edge neural voices; OpenAI and Miragea
+  (voice cloning) are optional engines.
+authors:
+  - name: "Miragea contributors"
+version: 0.3.0
+date-released: "2026-11-07"
+license: MIT
+repository-code: "https://github.com/yanghhu/ai-voiceover-studio"
+url: "https://github.com/yanghhu/ai-voiceover-studio#readme"
+keywords:
+  - ai voiceover
+  - text to speech
+  - faceless youtube
+  - word-by-word subtitles
+  - tiktok captions
+  - text to video
+  - subtitles
+  - python cli

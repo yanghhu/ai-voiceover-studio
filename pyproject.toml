@@ -5,20 +5,37 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ai-voiceover-studio"
 version = "0.3.0"
-description = "AI voiceover studio: text to speech, voice cloning, multi-speaker scripts, subtitles and faceless YouTube videos from the command line."
+description = "Open-source AI voiceover and faceless video generator: turn a script into text-to-speech narration, SRT subtitles and YouTube / Shorts / TikTok videos with word-by-word captions. Free voices, no API key."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Miragea contributors" }]
 keywords = [
-  "ai voiceover", "text to speech", "tts", "voice cloning", "youtube", "faceless video",
-  "dubbing", "subtitles", "narration", "srt", "voiceover generator", "ai narrator",
-  "edge-tts", "ken burns", "captions", "youtube shorts", "free tts",
-  "tiktok captions", "karaoke subtitles", "b-roll", "background music", "kinetic typography",
+  "ai voiceover",
+  "text to speech",
+  "tts",
+  "text to video",
+  "faceless youtube",
+  "faceless video generator",
+  "youtube shorts",
+  "tiktok captions",
+  "word-by-word subtitles",
+  "animated captions",
+  "subtitles",
+  "srt",
+  "voice cloning",
+  "dubbing",
+  "narration",
+  "edge-tts",
+  "video automation",
+  "ai video generator",
+  "ffmpeg",
+  "python cli",
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
+  "Intended Audience :: Education",
   "Intended Audience :: Developers",
   "Intended Audience :: End Users/Desktop",
   "License :: OSI Approved :: MIT License",
@@ -32,6 +49,13 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Multimedia :: Sound/Audio :: Speech",
   "Topic :: Multimedia :: Video",
+  "Topic :: Multimedia :: Video :: Conversion",
+  "Topic :: Text Processing :: Markup :: Markdown",
+  "Topic :: Utilities",
+  "Natural Language :: English",
+  "Natural Language :: Chinese (Simplified)",
+  "Natural Language :: Japanese",
+  "Natural Language :: Spanish",
 ]
 dependencies = []
 
@@ -48,9 +72,11 @@ voiceover = "voiceover_studio.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/yanghhu/ai-voiceover-studio"
+Documentation = "https://github.com/yanghhu/ai-voiceover-studio#readme"
+FAQ = "https://github.com/yanghhu/ai-voiceover-studio/blob/main/docs/FAQ.md"
+Source = "https://github.com/yanghhu/ai-voiceover-studio"
 Issues = "https://github.com/yanghhu/ai-voiceover-studio/issues"
 Changelog = "https://github.com/yanghhu/ai-voiceover-studio/blob/main/CHANGELOG.md"
-"Miragea API docs" = "https://miragea.ai/v1/guide"
 
 [tool.setuptools.packages.find]
 where = ["src"]

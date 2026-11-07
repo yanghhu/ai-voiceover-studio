@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Use-case guides with runnable commands in `docs/use-cases/` (faceless YouTube, Shorts / Reels /
+  TikTok, explainer and recap narration, multilingual dubbing, podcast and audiobook snippets).
+- Spanish example script `examples/script.es.md`.
+- `llms-full.txt` (all docs in one file, built by `scripts/build_llms_full.py`), `CITATION.cff`,
+  Code of Conduct, security policy, issue and pull request templates, social preview image.
+
+### Changed
+- `--lang` now also chooses the automatic voices for a whole script (e.g. `--lang es` gives Spanish
+  voices for every speaker); before, it was only a hint for reference audio.
+- README (all languages): definition, who it is for, use cases and a neutral comparison table;
+  FAQ reorganised around common questions; `llms.txt` follows the llmstxt.org format.
+
 ## [0.3.0] - 2026-11-07
 
 ### Added
