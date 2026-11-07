@@ -28,7 +28,7 @@
 
 ```bash
 git clone https://github.com/yanghhu/ai-voiceover-studio && cd ai-voiceover-studio
-pip install -e ".[edge]"
+pip install -e ".[edge]"          # or: pip install "ai-voiceover-studio[edge]"  (PyPI)
 voiceover video --script examples/demo.en.md --style tiktok --music ambient -o out/video.mp4
 ```
 
