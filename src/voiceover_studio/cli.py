@@ -122,6 +122,13 @@ def build_parser() -> argparse.ArgumentParser:
     video.add_argument("--no-progress-bar", action="store_true")
     video.add_argument("--font", help="caption font family or .ttf/.otf path (CJK: e.g. 'Noto Sans SC')")
 
+    studio = sub.add_parser("studio", parents=[common], help="launch the web studio in the "
+                           "browser (needs gradio: pip install 'ai-voiceover-studio[webui]')")
+    studio.add_argument("--host", default="127.0.0.1", help="interface to bind (default: localhost)")
+    studio.add_argument("--port", type=int, default=7860)
+    studio.add_argument("--workdir", type=Path, default=Path("studio_out"),
+                        help="where generated audio, subtitles and video are written")
+
     doctor = sub.add_parser("doctor", help="check ffmpeg, engines and API keys")
     doctor.add_argument("--online", action="store_true", help="also synthesize one short test line "
                         "with the free edge engine (no account needed)")
@@ -286,6 +293,17 @@ def cmd_task(args: argparse.Namespace) -> int:
     return 1 if task.get("status") == "failed" else 0
 
 
+def cmd_studio(args: argparse.Namespace) -> int:
+    try:
+        from .webui import launch
+    except ImportError:
+        from .errors import ConfigError
+        raise ConfigError("The web studio needs gradio: pip install 'ai-voiceover-studio[webui]'") from None
+    print("AI Voiceover Studio on http://%s:%d (Ctrl+C to stop)" % (args.host, args.port))
+    launch(host=args.host, port=args.port, workdir=args.workdir)
+    return 0
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     from .doctor import run_checks, format_report
     checks = run_checks(online=args.online)
@@ -298,7 +316,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 
 COMMANDS = {"say": cmd_say, "script": cmd_script, "voices": cmd_voices, "video": cmd_video, "task": cmd_task,
-            "doctor": cmd_doctor}
+            "studio": cmd_studio, "doctor": cmd_doctor}
 
 
 def main(argv: Optional[List[str]] = None) -> int:

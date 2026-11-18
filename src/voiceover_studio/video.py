@@ -52,12 +52,16 @@ SUPERSAMPLE = 1.5  # Ken Burns works on a 1.5x canvas so sub-pixel motion stays 
 
 @dataclass
 class Shot:
-    """One visual: ``kind`` is image, video or kinetic (generated background + key phrase)."""
+    """One visual: ``kind`` is image, video or kinetic (generated background + key phrase).
+
+    ``overlay`` is an optional transparent image composited on top of the shot
+    (script syntax ``![](picture.png){overlay}``) — a moving infographic."""
     duration: float
     kind: str = "kinetic"
     source: Optional[Path] = None
     phrase: str = ""
     start: float = 0.0
+    overlay: Optional[Path] = None
 
 
 def list_images(folder: Path) -> List[Path]:
@@ -108,29 +112,34 @@ def plan_shots(render: RenderResult, *, media: Sequence[Path] = (), script_dir: 
     for seg, start, end in zip(segs, starts, ends):
         span = max(0.1, end - start)
         files: List[Path] = []
+        overlays: List[Path] = []
         for ref in getattr(seg, "visuals", None) or []:
-            path = Path(ref)
+            marked = ref.endswith("{overlay}")
+            path = Path(ref[:-len("{overlay}")] if marked else ref)
             if not path.is_absolute() and script_dir is not None:
                 path = script_dir / path
             if not path.is_file():
                 raise ConfigError("B-roll file not found: %s (paths are relative to the script)" % path)
-            files.append(path)
+            (overlays if marked else files).append(path)
         if not files and queue:
             files = [queue.pop(0)]
         if files:
             shots.extend(Shot(span / len(files), _kind(f), f) for f in files)
-            continue
-        pieces = max(1, int(span // max_kinetic_shot) + (1 if span % max_kinetic_shot > 1.0 else 0))
-        sentences = [x for x in re.split(r"(?<=[.!?。！？])\s*", str(seg.text)) if x.strip()] or [seg.text]
-        pieces = min(pieces, len(sentences)) if len(sentences) > 1 else pieces
-        for i in range(pieces):
-            # each piece shows the key phrase of its own share of the sentences
-            part = sentences[i * len(sentences) // pieces:(i + 1) * len(sentences) // pieces]
-            sub = SimpleNamespace(text=" ".join(part) or seg.text,
-                                  emphasis=[e for e in (getattr(seg, "emphasis", None) or [])
-                                            if e in " ".join(part)] if pieces > 1 else
-                                  getattr(seg, "emphasis", None) or [])
-            shots.append(Shot(span / pieces, "kinetic", None, key_phrase(sub)))
+        else:
+            pieces = max(1, int(span // max_kinetic_shot) + (1 if span % max_kinetic_shot > 1.0 else 0))
+            sentences = [x for x in re.split(r"(?<=[.!?。！？])\s*", str(seg.text)) if x.strip()] or [seg.text]
+            pieces = min(pieces, len(sentences)) if len(sentences) > 1 else pieces
+            for i in range(pieces):
+                # each piece shows the key phrase of its own share of the sentences
+                part = sentences[i * len(sentences) // pieces:(i + 1) * len(sentences) // pieces]
+                sub = SimpleNamespace(text=" ".join(part) or seg.text,
+                                      emphasis=[e for e in (getattr(seg, "emphasis", None) or [])
+                                                if e in " ".join(part)] if pieces > 1 else
+                                      getattr(seg, "emphasis", None) or [])
+                shots.append(Shot(span / pieces, "kinetic", None, key_phrase(sub)))
+        for path in overlays:
+            if shots:
+                shots[-1].overlay = path
     t = 0.0
     for shot in shots:
         shot.start = t
@@ -200,6 +209,26 @@ def _clip_chain(idx: int, label: str, size: Tuple[int, int], fps: int, seconds: 
                 idx, fps, w, h, w, h, frames, fps, fps, label))
 
 
+OVERLAY_OPACITY = 0.92
+
+
+def _overlay_chain(shot: int, idx: int, size: Tuple[int, int], seconds: float) -> List[str]:
+    """Transparent overlay (infographic) floating over one shot: slides in, then drifts."""
+    w, h = size
+    ow = _even(w * 0.42)
+    margin = max(16, int(w * 0.035))
+    slide = min(0.8, max(0.3, seconds / 4.0))
+    x_in, x_end = w + 4, w - ow - margin
+    return [
+        "[%d:v]scale=%d:-1,format=rgba,colorchannelmixer=aa=%.2f[ov%d]"
+        % (idx, ow, OVERLAY_OPACITY, shot),
+        "[s%d][ov%d]overlay=x='if(lt(t,%.2f),%d+(%d-%d)*t/%.2f,%d+%d*sin((t-%.2f)/%.2f))'"
+        ":y='H-h-%d+%d*sin(t/%.2f)':eof_action=repeat,format=yuv420p[s%dv]"
+        % (shot, shot, slide, x_in, x_end, x_in, slide, x_end, max(2, int(ow * 0.04)),
+           slide, 2.5, margin, max(2, int(margin * 0.6)), 3.1, shot),
+    ]
+
+
 def _kinetic_input(i: int, size: Tuple[int, int], fps: int, seconds: float, radial: bool) -> List[str]:
     w, h = size
     c0, c1, c2 = PALETTES[i % len(PALETTES)]
@@ -251,40 +280,50 @@ def build_command(exe: str, shots: Sequence[Shot], audio: str, output: str, *, s
     args = [exe, "-hide_banner", "-loglevel", "error", "-y"]
     parts = []
     still = 0
+    input_idx = 0
+    slabels: List[str] = []
     for i, shot in enumerate(shots):
         length = shot.duration + (fade if i < n - 1 else 0.0)
         label = "s%d" % i
         if shot.kind == "kinetic" or shot.source is None:
             if has_gradients:
-                args += _kinetic_input(i, size, fps, length, gradient_type)
+                args += _kinetic_input(input_idx, size, fps, length, gradient_type)
             else:
                 c0 = PALETTES[i % len(PALETTES)][1]
                 args += ["-f", "lavfi", "-i", "color=c=%s:s=%dx%d:r=%d:d=%.3f" % (c0, w, h, fps, length + 0.1)]
             parts.append("[%d:v]format=yuv420p,trim=end_frame=%d,setpts=N/(%d*TB),fps=%d[%s]" % (
-                i, max(1, int(round(length * fps))), fps, fps, label))
+                input_idx, max(1, int(round(length * fps))), fps, fps, label))
         elif shot.kind == "video":
             args += ["-stream_loop", "-1", "-t", "%.3f" % (length + 0.2), "-i", str(shot.source)]
-            parts.append(_clip_chain(i, label, size, fps, length))
+            parts.append(_clip_chain(input_idx, label, size, fps, length))
         else:
             args += ["-i", str(shot.source)]
-            parts.append(_still_chain(i, label, size, fps, length, fit, motion, zoom, still))
+            parts.append(_still_chain(input_idx, label, size, fps, length, fit, motion, zoom, still))
             still += 1
-    voice_idx = n
+        input_idx += 1
+        if shot.overlay is not None:
+            args += ["-loop", "1", "-t", "%.3f" % (length + 0.2), "-i", str(shot.overlay)]
+            parts += _overlay_chain(i, input_idx, size, length)
+            slabels.append("s%dv" % i)
+            input_idx += 1
+        else:
+            slabels.append(label)
+    voice_idx = input_idx
     args += ["-i", str(audio)]
     music_idx = None
     if music:
-        music_idx = n + 1
+        music_idx = input_idx + 1
         args += musiclib.builtin_input(music, total) if music_builtin else musiclib.file_input(music)
-    last = "s0"
+    last = slabels[0]
     offset = 0.0
     for i in range(1, n):
         offset += durations[i - 1]
         out = "x%d" % i
         if fade > 0:
-            parts.append("[%s][s%d]xfade=transition=%s:duration=%.3f:offset=%.3f[%s]" % (
-                last, i, style[(i - 1) % len(style)], fade, offset, out))
+            parts.append("[%s][%s]xfade=transition=%s:duration=%.3f:offset=%.3f[%s]" % (
+                last, slabels[i], style[(i - 1) % len(style)], fade, offset, out))
         else:
-            parts.append("[%s][s%d]concat=n=2:v=1:a=0[%s]" % (last, i, out))
+            parts.append("[%s][%s]concat=n=2:v=1:a=0[%s]" % (last, slabels[i], out))
         last = out
     if grade == "cinematic":
         parts.append("[%s]eq=contrast=1.06:saturation=1.08,vignette=angle=PI/5,"

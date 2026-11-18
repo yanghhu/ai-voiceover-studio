@@ -147,3 +147,21 @@ def test_cli_speed_applies_to_auto_voices(edge, tmp_path):
     script.write_text("Hello there.", encoding="utf-8")
     Studio(edge).render_script(script, tmp_path / "out", output_name="m.wav", voice_overrides=Voice(speed=1.2))
     assert FakeCommunicate.calls[-1].kwargs["rate"] == "+20%"
+
+
+class SilentCommunicate:
+    """Mimics the December 2025 service change: the stream ends without any audio."""
+
+    def __init__(self, text, voice, **kwargs):
+        self.text = text
+
+    async def stream(self):
+        yield {"type": "SentenceBoundary", "offset": 0, "duration": 0, "text": self.text}
+        return
+
+
+def test_no_audio_error_suggests_upgrading_edge_tts():
+    with pytest.raises(ProviderError) as excinfo:
+        EdgeProvider(communicate=SilentCommunicate, sleep=lambda s: None).synthesize(
+            "Hello world.", Voice())
+    assert "edge-tts" in str(excinfo.value) and "upgrade" in str(excinfo.value)

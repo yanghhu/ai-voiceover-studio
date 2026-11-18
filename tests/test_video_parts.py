@@ -177,3 +177,33 @@ def test_doctor_online_uses_test_hook():
     checks = run_checks(environ={}, which=lambda n: None, runner=lambda *a, **k: _Proc(""),
                         edge_available=True, online=True, online_test=lambda: 1.5)
     assert {c["name"]: c for c in checks}["online test"]["status"] == "ok"
+
+
+def test_plan_shots_attaches_overlays(tmp_path):
+    (tmp_path / "clip.mp4").write_bytes(b"x")
+    (tmp_path / "info.png").write_bytes(b"x")
+    render = SimpleNamespace(duration=6.0, segments=[
+        _seg(0.0, 3.0, "One.", ["clip.mp4", "info.png{overlay}"]),
+        _seg(3.0, 6.0, "Two.", ["info.png{overlay}"])])
+    shots = plan_shots(render, script_dir=tmp_path)
+    assert len(shots) == 2
+    assert shots[0].kind == "video" and shots[0].overlay == tmp_path / "info.png"
+    assert shots[1].kind == "kinetic" and shots[1].overlay == tmp_path / "info.png"
+
+
+def test_build_command_composites_overlay(tmp_path):
+    (tmp_path / "clip.mp4").write_bytes(b"x")
+    (tmp_path / "info.png").write_bytes(b"x")
+    (tmp_path / "plain.mp4").write_bytes(b"x")
+    shots = [Shot(2.0, "video", tmp_path / "clip.mp4", overlay=tmp_path / "info.png"),
+             Shot(2.0, "video", tmp_path / "plain.mp4")]
+    cmd = build_command("ffmpeg", shots, "voice.wav", "o.mp4", size=(1280, 720), fps=25,
+                        transition=0.5, total=4.0)
+    joined = " ".join(cmd)
+    graph = cmd[cmd.index("-filter_complex") + 1]
+    assert "-loop 1" in joined and str(tmp_path / "info.png") in joined
+    assert "colorchannelmixer=aa=0.92" in graph
+    assert "overlay=x='if(lt(t," in graph and "[s0v]" in graph
+    assert "xfade" in graph and "[s0v][s1]xfade" in graph
+    # voice input index accounts for the extra overlay input (2 shots + 1 overlay -> 3)
+    assert cmd[cmd.index("-map") + 3] == "3:a"

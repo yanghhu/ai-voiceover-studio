@@ -27,7 +27,7 @@ DEFAULT_SPEAKER = "NARRATOR"
 
 _TAG = re.compile(r"^\s*(?:[-*]\s+)?\[(?P<name>[^\]\n]{1,40})\]\s*(?:\((?P<opts>[^)]*)\))?\s*:\s*(?P<text>.*)$")
 _PAUSE = re.compile(r"^\s*\[(?:pause|break)\s*(?P<sec>\d+(?:\.\d+)?)?\s*s?\]\s*$", re.I)
-_IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)>\s]+)>?(?:\s+\"[^\"]*\")?\s*\)")
+_IMAGE = re.compile(r"!\[[^\]]*\]\(\s*<?([^)>\s]+)>?(?:\s+\"[^\"]*\")?\s*\)(\{overlay\})?")
 _EMPHASIS = re.compile(r"(\*\*|__)(?=\S)(.+?)(?<=\S)\1")
 _SENTENCE = re.compile(r"(?<=[.!?。！？…])\s+|(?<=[。！？])")
 
@@ -124,7 +124,7 @@ def parse_script(source: str, *, default_speaker: str = DEFAULT_SPEAKER,
         nonlocal buffer, pending_visuals
         raw = " ".join(buffer)
         buffer = []
-        visuals = _IMAGE.findall(raw)
+        visuals = [m.group(1) + (m.group(2) or "") for m in _IMAGE.finditer(raw)]
         emphasis = [clean_markdown(m[1]) for m in _EMPHASIS.findall(raw)]
         text = clean_markdown(raw)
         if not text:

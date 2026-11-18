@@ -40,6 +40,7 @@ That is the whole setup. You get `out/video.mp4` (1080p: B-roll with Ken Burns m
 ```bash
 voiceover script examples/script.md -o out/          # audio only: out/voiceover.mp3 + .srt + manifest.json
 voiceover say "Welcome back to the channel!" -o hello.mp3
+voiceover studio                                     # web UI: write, pick voice, listen (pip install ".[webui]")
 voiceover doctor                                      # ffmpeg, engines, keys, fonts
 ```
 
@@ -82,6 +83,9 @@ Each guide has a copy-paste command that runs on the bundled examples.
 - [Voice cloning](#voice-cloning-from-a-reference-clip)
 - [Subtitles (SRT)](#subtitles-srt-for-youtube)
 - [Faceless video](#faceless-youtube-video-and-shorts-from-a-script)
+- [Web studio](#web-studio)
+- [AI Video](#ai-video-from-a-prompt-to-a-finished-video)
+- [Clip studio](#clip-studio-reuse-youtube-footage)
 - [Use it from Python](#use-it-from-python)
 - [Use it from an AI coding agent](#use-it-from-an-ai-coding-agent)
 - [Architecture](#architecture)
@@ -90,6 +94,149 @@ Each guide has a copy-paste command that runs on the bundled examples.
 - [FAQ](#faq)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
+
+## Web studio
+
+Prefer a browser over the terminal? `voiceover studio` opens a local web app (Gradio, one optional
+extra: `pip install "ai-voiceover-studio[webui]"`) where you can write or paste a script, load one of
+the bundled examples, pick the engine, language and speed, then generate and listen to the voiceover
+with its SRT subtitles and segment table. A *Quick line* tab voices single sentences, a *Voices* tab
+browses the voices of the selected engine (click a row and hit *Test voice* for an instant preview),
+and a *Video* tab renders the finished MP4 when ffmpeg is installed, with optional B-roll images or
+clips uploaded directly in the browser. It binds to localhost by default (`--host`, `--port` to change).
+
+No local Python? Run the same studio on [Google Colab](https://colab.research.google.com/github/mnatali74/ai-voiceover-studio/blob/vibe/web-studio-b186e9/colab/ai_voiceover_studio.ipynb):
+notebook [`colab/ai_voiceover_studio.ipynb`](colab/ai_voiceover_studio.ipynb) installs the
+package, reads the API keys from the Colab secrets, checks Pixabay and OpenRouter connectivity
+and serves the full UI on a public `*.gradio.live` link. It is tuned for a YouTube-free
+workflow: Pixabay and Wikimedia Commons for footage, OpenRouter image models for illustrations.
+
+## AI Video: from a prompt to a finished video
+
+The *AI Video* tab builds a video from a one-line prompt, HeyGen-style. Set `OPENROUTER_API_KEY`
+(https://openrouter.ai/keys, any model works — pick cheap ones for planning) and the studio will:
+plan the scenes with the OpenRouter model you choose (narration + search keywords per scene, in
+your language), fetch keyless stock visuals for every scene (Wikimedia Commons video and images,
+Openverse images), generate a fresh image with Pollinations when nothing matches, optionally check
+each asset with a vision model on the same OpenRouter key, and show everything in an editable
+scene plan before rendering the MP4 with the usual captions, B-roll motion and music. No paid
+stock subscriptions: every visual source works without an API key, and OpenRouter is only used
+for the scene plan and the vision check.
+
+## Clip studio: reuse YouTube footage
+
+The *Video wizard* tab (formerly *Clip studio*) walks you through the whole video, one step at
+a time: from your prompt the AI **writes the narration** (and advises whether subtitles are
+worth it) and sets the target duration to its **reading time**; you pick the narrator voice;
+the AI describes **what each scene should show** and prefills the search queries; you choose
+the **presentation style** — with the overlay layer on, the AI designs the text and icon
+elements that float over the video as **transparent cards drawn locally** (text, vector
+icons and accent lines — no AI image generation, precise and free); then the matching clips are found, previewed inline and
+selected (with alternative queries on demand), the transitions between clips are chosen from a
+list, and you get a fast silent **preview** before the final render.
+
+Write what the video is
+about, and the OpenRouter model suggests several varied search queries (at least five
+different sources, so no single video gets copied) shown in an **editable form** — tune them or
+write your own (hand-written queries need no API key). The search runs on the **selected
+sources**: YouTube, **Wikimedia Commons** (keyless, richly described videos downloaded directly
+over HTTPS — no cookies, no bot checks, no rate limits) and **Pixabay** (professionally tagged
+cinematic footage; free API key shown at the top of [pixabay.com/api/docs/](https://pixabay.com/api/docs/)
+when logged in, or `VOICEOVER_PIXABAY_KEY`). People-focused titles like vlogs,
+tutorials and interviews are filtered out. You **preview the
+candidates inline without
+downloading** anything, tick the videos you like (or paste links manually), and the studio then
+reads each source's metadata and subtitles (spaced by a configurable pause to respect YouTube's
+rate limits), asks the model to pick **every** reusable highlight segment, and downloads **only
+those sections** of each video (<=720p, video-only: a 30-minute source costs a few megabytes,
+not gigabytes) before cutting them into
+standalone **audio-free** mp4 clips with meaningful still frames extracted. Every clip is then
+classified in detail by the model — description, tags, mood, setting, camera move, people check —
+and stored in a JSON catalog on disk (`clip_library/catalog.json`), your searchable B-roll
+database. From the video prompt and that catalog the model selects the best 3–8 shots, writes a
+spoken line for each, and the tab renders the final MP4 with the narrator voice you pick in the
+tab. By default the narrations are written to a word budget that **reads in about the target
+duration**, so the video lasts about as long as its reading time — the status shows the measured
+reading time next to the target, and moving the duration slider (or editing the script) stretches
+or shortens the video. Before spending time on the full render, a **Quick preview** button produces a fast, silent,
+low-resolution draft (`preview.mp4`) to check the flow HeyGen-style. For a **presentation look**
+(great for educational videos) the *Add illustrations* step rewrites the script adding
+AI-generated images as **transparent overlays** on the video — every 1–3 shots, with a selectable
+OpenRouter image model and artistic style (e.g. *Infografica illustrata*): the clip keeps playing
+underneath while the infographic slides in and drifts over it (script syntax
+`![](picture.png){overlay}` works in any script). Caption style **none** turns the captions off.
+The clips and frames also show up in the
+*Video* tab, where you tick exactly which ones to reuse as B-roll. A URL, a single clip or a
+subtitle fetch that fails is reported and the rest of the batch continues; the source video is
+deleted once its clips are cut, and a full disk stops the batch with a clear message. When
+YouTube answers "Sign in to confirm you're
+not a bot", make sure a JavaScript runtime is installed — recent yt-dlp needs
+[deno](https://docs.deno.com/runtime/getting_started/installation/) (or Node) on the machine to
+solve YouTube's challenges — and export your browser cookies to a cookies.txt file and point the
+studio at it: set the cookies field in the tab, or `VOICEOVER_YTDLP_COOKIES=/path/cookies.txt`,
+or `VOICEOVER_YTDLP_COOKIES_FROM_BROWSER=chrome`. Extra:
+`pip install "ai-voiceover-studio[clip]"`; needs ffmpeg.
+
+## AI Illustrations: clips-free videos made only of AI drawings
+
+The *AI Illustrations* tab builds the whole video **without any video clip**: every scene is an
+AI-generated illustration brought to life. The AI writes the narration from your prompt (one
+paragraph per scene, edit at will), then describes **one concrete image prompt per paragraph**
+(editable, one per line); an OpenRouter image model generates the illustrations with a chosen
+**artistic style** — all the presets from the illustration notebooks: *Infografica illustrata*,
+*Vettoriale piatto*, *Schema botanico*, *Acquerello*, *Gouache*, *Tempera*, *Fumetto*,
+*Pennarelli*, *Matite colorate*, *Carboncino*, *Gessetti*, *Linoleografia*, *Collage di carta*…
+— an optional free-text style detail and a 16:9 / 1:1 / 9:16 aspect ratio (SVG answers are
+rasterized automatically when [cairosvg](https://cairosvg.org) is installed). To avoid the
+static-slideshow look each picture is **animated into a looping GIF with a Ken Burns move**
+(push-in, pan, pull-out or pan + rise — drawn locally with Pillow, free and instant), and the
+**text, frames and symbols** from the overlay design are **baked in superimposition** on every
+frame as the same local transparent cards used by the wizard (title, bullet points, vector
+icons, accent lines). The GIFs loop, so in the final video every shot keeps moving for its
+whole duration; the script keeps the step-1 narration **exactly as written** (one
+`![](slide_NN.gif)` line per scene), then you get the fast silent preview and the final render
+with the narrator voice, transitions and captions of your choice.
+
+## GIF studio: seamless looping GIFs from AI frames
+
+The *GIF studio* tab is a workshop dedicated to **true animated GIFs** — not a still picture
+that moves, but a real frame-by-frame animation, with three modes:
+
+- **Motion design (Lottie)** (default): the TEXT model writes the whole animation as a
+  **Lottie (Bodymovin) JSON** — the industry standard for professional explainer motion:
+  vector shapes, lines, icons, keyframed position/scale/rotation, trim-path line drawing.
+  `python-lottie` (pure Python, no AI inside) validates the JSON, renders a
+  seamless-looping GIF (needs `cairosvg` + system `libcairo`; the Colab cell installs both)
+  and a live **HTML preview**. Being pure vectors and keyframes, the scene can never drift:
+  the loop is professional-grade by construction, with a single LLM call.
+  The animation **kind** is selectable: **'Cartoon character'** — the model builds the
+  character from shape groups (head, torso, arms, legs) and animates it with classic
+cartoon principles (walk cycle with limbs rotating from their joints, body bob, eye blink,
+  squash-and-stretch, walk-in-place so the loop never jumps) — or 'Infographic vector' for
+  icons, arrows and lines. Vector limbs anchored at the joints mean the objects INSIDE the
+  scene really move, with no image warping.
+- **One image + procedural motion** (default, zero drift): the image model draws the scene
+  ONCE and the movement is applied locally with a cyclic, sinusoidal transform — `wind`
+  (top-heavy sway for ears, grass, flags), `waves` (bottom-heavy sway for water),
+  `breathe` (cyclic zoom) or `shimmer` (subtle sway), with an adjustable strength. The
+  phase wraps around 2π exactly, so the loop returns to the starting frame **by
+  construction** and the scene can never wobble between AI generations. One API call.
+- **AI frames**: for subjects whose movement must be literal (crawling worms), describe the
+  scene and what moves ("wheat ears swaying in the wind"), and the model writes one image
+  prompt per frame: **the same exact scene** with only the **phase of the motion** changing.
+  A local step assembles the seamless loop: ping-pong playback (forward + backward)
+  guarantees the GIF returns exactly to its starting point, with an adjustable loop duration
+  and optional cross-fade frames that smooth out small drifts between the AI-drawn frames.
+- **AI clip (text-to-video)**: instead of assembling the motion locally, a real generative
+  video model (Veo 3.1, Seedance, Kling, Wan, Hailuo — paid per **second** of output)
+  animates **everything INSIDE the scene**: walking animals, moving characters. The text
+  model first turns your scene + movement into ONE cinematic prompt (editable), then the
+  clip job is submitted to OpenRouter's async video API, polled and downloaded as a normal
+  **MP4** — which the render engine already loops (`-stream_loop -1`), so it goes straight
+  into the video pipeline as one shot. Best for hero shots; keep clips short (4-15 s).
+
+Test the GIF in this tab; the video pipeline (voice-over, cards, preview, render) comes
+after, once the motion looks right.
 
 ## Why this exists
 
@@ -228,6 +375,7 @@ What happens: each paragraph is voiced; its B-roll is shown exactly while it is 
 | Option | Default | What it does |
 | --- | --- | --- |
 | `![](https://github.com/yanghhu/ai-voiceover-studio/tree/main/file)` in the script | — | B-roll (image or video clip) for that paragraph; paths are relative to the script |
+| `![](https://github.com/yanghhu/ai-voiceover-studio/tree/main/file){overlay}` in the script | — | transparent overlay on the shot's clip: slides in and drifts like a moving infographic (great with alpha PNGs) |
 | `--images DIR` | — | images / clips for paragraphs without `![](https://github.com/yanghhu/ai-voiceover-studio/blob/main/...)`, in file-name order |
 | `--style tiktok\|clean\|bold\|minimal\|box` | `tiktok` vertical, `clean` landscape | `tiktok`: 1–4 big words, spoken word pops in yellow, keywords green · `bold`: huge words revealed as spoken · `clean`: calm two-line captions with a soft highlight · `minimal` / `box`: static lines |
 | `--music ambient\|pulse\|FILE` | none | background music; `ambient` and `pulse` are generated by this project at render time (royalty-free), or any audio file (looped) |

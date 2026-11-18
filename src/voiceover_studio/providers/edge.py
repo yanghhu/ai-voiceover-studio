@@ -213,9 +213,12 @@ class EdgeProvider(VoiceProvider):
                 last = ProviderError("No audio received for voice %s" % name, code="no_audio")
             if attempt + 1 < self.max_retries:
                 self.sleep(min(2.0 ** attempt, 8.0))
-        raise ProviderError("Edge TTS failed after %d attempts: %s. Check your internet connection "
-                            "(run `voiceover doctor --online`)." % (self.max_retries, last),
-                            code="request_failed", retryable=True)
+        message = "Edge TTS failed after %d attempts: %s. Check your internet connection " \
+                  "(run `voiceover doctor --online`)." % (self.max_retries, last)
+        if "no audio" in str(last).lower():
+            message += (" This also happens when the edge-tts package is older than the "
+                        "current Microsoft service: upgrade with pip install -U edge-tts.")
+        raise ProviderError(message, code="request_failed", retryable=True)
 
     # -- voices ------------------------------------------------------------------
     def list_voices(self, limit: int = 20, offset: int = 0) -> Tuple[List[VoiceInfo], bool]:
